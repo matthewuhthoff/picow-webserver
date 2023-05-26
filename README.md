@@ -145,6 +145,10 @@ above are required in any build of the sample app:
   * `PICO_BOARD=pico_w` identifies the PicoW for the SDK as the target
     hardware. This is required in any build based on the SDK that
     targets the PicoW.
+    * `PICO_BOARD` is set in the sample project's `cmake` invocation to
+      emphasize that is always necessary for picow-http. But it is probably
+      easier to include the line `set(PICO_BOARD pico_w)` in your
+      project's `CMakeLists.txt`.
   * `WIFI_SSID` and `WIFI_PASSWORD`: This project follows the PicoW
     examples in the
     [`pico-examples`](https://github.com/raspberrypi/pico-examples)
