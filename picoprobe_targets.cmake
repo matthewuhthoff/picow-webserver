@@ -62,7 +62,7 @@ function(picoprobe_add_flash_target EXECUTABLE_NAME)
 
   message(STATUS "generating target flash-${EXECUTABLE_NAME}")
   add_custom_target(flash-${EXECUTABLE_NAME}
-    COMMAND ${OPENOCD_PATH} ${OPENOCD_SEARCH_ARG} -f interface/picoprobe.cfg -f target/rp2040.cfg -c \"program ${CMAKE_BINARY_DIR}/${EXECUTABLE_NAME}${CMAKE_EXECUTABLE_SUFFIX} verify reset exit\"
+    COMMAND ${OPENOCD_PATH} ${OPENOCD_SEARCH_ARG} -f interface/cmsis-dap.cfg -c "adapter speed 5000" -f target/rp2040.cfg -c \"program ${CMAKE_BINARY_DIR}/${EXECUTABLE_NAME}${CMAKE_EXECUTABLE_SUFFIX} verify reset exit\"
     DEPENDS ${EXECUTABLE_NAME}
     COMMENT "Flash ${EXECUTABLE_NAME}${CMAKE_EXECUTABLE_SUFFIX} with openocd"
   )
@@ -77,7 +77,7 @@ function(picoprobe_add_reset_target)
 
   message(STATUS "generating target reset")
   add_custom_target(reset
-    COMMAND ${OPENOCD_PATH} ${OPENOCD_SEARCH_ARG} -f interface/picoprobe.cfg -f target/rp2040.cfg -c \"init$<SEMICOLON> reset init$<SEMICOLON> exit\"
+    COMMAND ${OPENOCD_PATH} ${OPENOCD_SEARCH_ARG} -f interface/cmsis-dap.cfg -c "adapter speed 5000" -f target/rp2040.cfg -c \"init$<SEMICOLON> reset\"
     COMMENT "Reset with openocd"
   )
 endfunction()
