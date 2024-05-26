@@ -31,10 +31,10 @@ add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/lib/picow-http)
 # 'make reset' restarts the app.
 picoprobe_add_reset_target()
 
-# If NTP_SERVER is defined in the cmake invocation, pass in its value
+# If NTP_SERVERS is defined in the cmake invocation, pass in its value
 # to the preprocessor. See main.c
-if (DEFINED NTP_SERVER)
-	add_compile_definitions(NTP_SERVER=\"${NTP_SERVER}\")
+if (DEFINED NTP_SERVERS)
+	add_compile_definitions(NTP_SERVERS=\"${NTP_SERVERS}\")
 endif()
 
 # Optionally override the PicoW default hostname.

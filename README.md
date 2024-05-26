@@ -160,12 +160,12 @@ out if only versions without TLS are to be built:
 
 There is an optional parameter for `-D` on the `cmake` command line:
 
-  * `NTP_SERVER`: the server to be used for [time
+  * `NTP_SERVERS`: a list of servers to be used for [time
     synchronization](https://slimhazard.gitlab.io/picow_http/group__ntp.html)
 
-The default value of `NTP_SERVER` is a generic pool; it is usually
-much better to specify an NTP server or pool that is "closer" to the
-location where the PicoW will be deployed. If your WiFi router
+The default value of `NTP_SERVERS` is a list for a generic pool; it is
+usually much better to specify a NTP servers or a pool that is "closer"
+to the location where the PicoW will be deployed. If your WiFi router
 provides NTP synchronization, then that is the ideal choice.
 
 After the `cmake` call, the software is built with `make`:

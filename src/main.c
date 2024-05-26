@@ -362,10 +362,10 @@ main(void)
 	/*
 	 * Start with the default configuration for the HTTP server.
 	 *
-	 * If an NTP server was named at compile time, set it here.  We
-	 * set a longer idle timeout than specified in the default
-	 * configuration, since Javascript code runs updates every few
-	 * seconds for /temp and /rssi (to update the temperature and
+	 * If a list of NTP servers was named at compile time, set it
+	 * here.  We set a longer idle timeout than specified in the
+	 * default configuration, since Javascript code runs updates every
+	 * few seconds for /temp and /rssi (to update the temperature and
 	 * signal strength in the UI). Most browsers leave connections
 	 * established after a page is loaded, so keep them open to be
 	 * re-used for the updates.
@@ -373,8 +373,8 @@ main(void)
 	 * See: https://slimhazard.gitlab.io/picow_http/group__server.html#ga3380001925d9eb091370db86d85f7349
 	 */
 	cfg = http_default_cfg();
-#ifdef NTP_SERVER
-	cfg.ntp_cfg.server = NTP_SERVER;
+#ifdef NTP_SERVERS
+	cfg.ntp_cfg.servers = NTP_SERVERS;
 #endif
 	cfg.idle_tmo_s = 30;
 
