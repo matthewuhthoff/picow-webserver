@@ -13,6 +13,7 @@ include(picoprobe_targets.cmake)
 project(picow-http-example C CXX ASM)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
+set(PICO_BOARD pico_w)
 
 pico_sdk_init()
 
