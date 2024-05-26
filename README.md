@@ -73,8 +73,7 @@ $ git clone --recurse-submodules https://gitlab.com/slimhazard/picow-http-exampl
 $ cd picow-http-example
 $ mkdir build
 $ cd build
-$ cmake -DPICO_BOARD=pico_w -DWIFI_SSID=my_wifi -DWIFI_PASSWORD=wifi_pass \
-        -DHOSTNAME=picow-sample ..
+$ cmake -DWIFI_SSID=my_wifi -DWIFI_PASSWORD=wifi_pass -DHOSTNAME=picow-sample ..
 $ make -j
 ```
 
@@ -135,16 +134,12 @@ that directory:
 $ cd picow-http-example
 $ mkdir build
 $ cd build
-$ cmake -DPICO_BOARD=pico_w -DWIFI_SSID=my_wifi -DWIFI_PASSWORD=wifi_pass \
-        -DHOSTNAME=picow-sample ..
+$ cmake -DWIFI_SSID=my_wifi -DWIFI_PASSWORD=wifi_pass -DHOSTNAME=picow-sample ..
 ```
 
-Three of the `-D` command-line options in the `cmake` invocation shown
+Two of the `-D` command-line options in the `cmake` invocation shown
 above are required in any build of the sample app:
 
-  * `PICO_BOARD=pico_w` identifies the PicoW for the SDK as the target
-    hardware. This is required in any build based on the SDK that
-    targets the PicoW.
   * `WIFI_SSID` and `WIFI_PASSWORD`: This project follows the PicoW
     examples in the
     [`pico-examples`](https://github.com/raspberrypi/pico-examples)
