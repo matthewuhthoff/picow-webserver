@@ -337,12 +337,12 @@ File picow-https-example-poll.bin:
 
 Program Information
  name:         picow-https-example-poll
- version:      0.5.0
+ version:      0.8.0
  web site:     https://gitlab.com/slimhazard/picow-http-example
  description:  example app for the picow-http library
  features:     hostname: picow-sample
                AP SSID: my_wifi
-               picow-http version: 0.5.0
+               picow-http version: 0.8.0
                lwIP version: 2.2.0d
                arch: poll
                TLS: yes
