@@ -73,8 +73,7 @@ $ git clone --recurse-submodules https://gitlab.com/slimhazard/picow-http-exampl
 $ cd picow-http-example
 $ mkdir build
 $ cd build
-$ cmake -DPICO_BOARD=pico_w -DWIFI_SSID=my_wifi -DWIFI_PASSWORD=wifi_pass \
-        -DHOSTNAME=picow-sample ..
+$ cmake -DWIFI_SSID=my_wifi -DWIFI_PASSWORD=wifi_pass -DHOSTNAME=picow-sample ..
 $ make -j
 ```
 
@@ -135,20 +134,12 @@ that directory:
 $ cd picow-http-example
 $ mkdir build
 $ cd build
-$ cmake -DPICO_BOARD=pico_w -DWIFI_SSID=my_wifi -DWIFI_PASSWORD=wifi_pass \
-        -DHOSTNAME=picow-sample ..
+$ cmake -DWIFI_SSID=my_wifi -DWIFI_PASSWORD=wifi_pass -DHOSTNAME=picow-sample ..
 ```
 
-Three of the `-D` command-line options in the `cmake` invocation shown
+Two of the `-D` command-line options in the `cmake` invocation shown
 above are required in any build of the sample app:
 
-  * `PICO_BOARD=pico_w` identifies the PicoW for the SDK as the target
-    hardware. This is required in any build based on the SDK that
-    targets the PicoW.
-    * `PICO_BOARD` is set in the sample project's `cmake` invocation to
-      emphasize that is always necessary for picow-http. But it is probably
-      easier to include the line `set(PICO_BOARD pico_w)` in your
-      project's `CMakeLists.txt`.
   * `WIFI_SSID` and `WIFI_PASSWORD`: This project follows the PicoW
     examples in the
     [`pico-examples`](https://github.com/raspberrypi/pico-examples)
@@ -169,12 +160,12 @@ out if only versions without TLS are to be built:
 
 There is an optional parameter for `-D` on the `cmake` command line:
 
-  * `NTP_SERVER`: the server to be used for [time
+  * `NTP_SERVERS`: a list of servers to be used for [time
     synchronization](https://slimhazard.gitlab.io/picow_http/group__ntp.html)
 
-The default value of `NTP_SERVER` is a generic pool; it is usually
-much better to specify an NTP server or pool that is "closer" to the
-location where the PicoW will be deployed. If your WiFi router
+The default value of `NTP_SERVERS` is a list for a generic pool; it is
+usually much better to specify a NTP servers or a pool that is "closer"
+to the location where the PicoW will be deployed. If your WiFi router
 provides NTP synchronization, then that is the ideal choice.
 
 After the `cmake` call, the software is built with `make`:
@@ -346,12 +337,12 @@ File picow-https-example-poll.bin:
 
 Program Information
  name:         picow-https-example-poll
- version:      0.5.0
+ version:      0.8.0
  web site:     https://gitlab.com/slimhazard/picow-http-example
  description:  example app for the picow-http library
  features:     hostname: picow-sample
                AP SSID: my_wifi
-               picow-http version: 0.5.0
+               picow-http version: 0.8.0
                lwIP version: 2.2.0d
                arch: poll
                TLS: yes
