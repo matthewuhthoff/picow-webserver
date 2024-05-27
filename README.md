@@ -168,6 +168,13 @@ usually much better to specify a NTP servers or a pool that is "closer"
 to the location where the PicoW will be deployed. If your WiFi router
 provides NTP synchronization, then that is the ideal choice.
 
+Note that this project sets the `PICO_BOARD` variable to `pico_w` in
+[`CMakeLists.txt`](CMakeLists.txt), since the software will only ever
+be built for a PicoW. This overrides the default value of `PICO_BOARD`
+and is always necessary. It is advisable to do so in the
+`CMakeLists.txt` of your own project as well (otherwise you'll always
+be obliged to type `-DPICO_BOARD=pico_w` on the `cmake` command line).
+
 After the `cmake` call, the software is built with `make`:
 
 ```shell
