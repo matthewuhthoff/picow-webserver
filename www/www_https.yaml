@@ -78,14 +78,23 @@
       - GET
       - HEAD
 
-# The "certificate" element has two fields "crt" and "key", both
-# required. Both of them specify files on paths relative to the "www"
-# directory. The two files MUST be in DER (binary) format. See:
+# The "certificate" element has two required fields "crt" and "key"
+# and one optional field "pass".
 #
+# The values of "crt" and "key" specify files on paths relative to the
+# "www" directory. Thosee two files MUST be in either PEM (ASCII) or
+# DER (binary) format. See:
+#
+# https://en.wikipedia.org/wiki/Privacy-Enhanced_Mail
 # https://en.wikipedia.org/wiki/X.690#DER_encoding
 #
 # "crt" is the path of the server certificate, and "key" is the
-# server's private key.
+# server's private key. In the example, both of them are in PEM format.
+#
+# The private key may be encrypted, in which case the "pass" field is
+# also required. "pass" specifies a file that contains the encryption
+# passphrase.
   - certificate:
-      crt: crt/picow-sample.crt
-      key: crt/picow-sample.key
+      crt: crt/picow-sample.crt.pem
+      key: crt/picow-sample.key.pem
+      pass: crt/pass.txt
