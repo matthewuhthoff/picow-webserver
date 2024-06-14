@@ -95,7 +95,7 @@ In the following we go over the process step by step.
 
 The [Pico C
 SDK](https://raspberrypi.github.io/pico-sdk-doxygen/index.html) since
-version 1.5.0 and its toolchain are required to build the
+version 1.5.1 and its toolchain are required to build the
 app. picow-http also requires some [additional
 software](https://gitlab.com/slimhazard/picow_http/-/wikis/required-software);
 see the link (at the [picow-http project
