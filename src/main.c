@@ -55,8 +55,6 @@
 /* Raw ADC reading for the temperature sensor. */
 static volatile uint16_t temp_adc_raw = UINT16_MAX;
 /*
- * In threadsafe background mode, rssi updates are run from core1, and
- * require a wifi link.
  * linkup is true when the TCP/IP link is up, so that core1 knows that the
  * periodic rssi updates may begin.
  */
@@ -69,18 +67,12 @@ static struct netinfo netinfo;
 /* Critical sections to protect access to shared data */
 static critical_section_t temp_critsec, rssi_critsec, linkup_critsec;
 
-/* repeating_timer object for rssi updates */
-static repeating_timer_t rssi_timer;
-
-#if PICO_CYW43_ARCH_POLL
-/*
- * In poll mode, rssi updates must be called from the main loop. So the
- * repeating timer is only used to pace the updates. The timer sets this
- * boolean to true, and the main loop resets it to false after getting the
- * update.
- */
-static volatile bool rssi_ready = false;
-#endif
+/* at-time worker for rssi updates */
+static void rssi_work(async_context_t *context, async_at_time_worker_t *worker);
+static async_at_time_worker_t rssi_worker = {
+	.do_work = rssi_work,
+	.user_data = NULL,
+};
 
 /*
  * ISR for ADC_IRQ_FIFO, called when the ADC writes a value to its
@@ -139,14 +131,12 @@ get_rssi(void)
 }
 
 /*
- * Callback for the repeating_timer used in background mode, to update the
- * AP rssi.
+ * Worker funcion to update the AP rssi.
  */
-static bool
-__time_critical_func(rssi_update)(repeating_timer_t *rt)
+static void
+rssi_work(async_context_t *ctx, async_at_time_worker_t *wrk)
 {
 	int32_t val;
-	(void)rt;
 
 	if (cyw43_wifi_get_rssi(&cyw43_state, &val) != 0)
 		val = INT32_MAX;
@@ -154,38 +144,9 @@ __time_critical_func(rssi_update)(repeating_timer_t *rt)
 	critical_section_enter_blocking(&rssi_critsec);
 	rssi = val;
 	critical_section_exit(&rssi_critsec);
-	return true;
-}
 
-#if PICO_CYW43_ARCH_POLL
-/*
- * Callback for the repeating_timer in poll mode. Just sets the boolean to
- * indicate that the timeout has expired.
- */
-static bool
-__time_critical_func(rssi_poll)(repeating_timer_t *rt)
-{
-	(void)rt;
-	rssi_ready = true;
-	return true;
-}
-#endif
-
-static void
-start_rssi_poll(repeating_timer_callback_t cb)
-{
-	/* Get the initial rssi value. */
-	(void)rssi_update(NULL);
-
-	/*
-	 * Since this may be core1, we cannot use the default alarm pool.
-	 * Panics on failure.
-	 */
-	alarm_pool_t *pool = alarm_pool_create_with_unused_hardware_alarm(1);
-	AN(pool);
-	if (!alarm_pool_add_repeating_timer_ms(pool, -RSSI_INTVL_MS, cb, NULL,
-					       &rssi_timer))
-		HTTP_LOG_ERROR("Failed to start timer to poll rssi");
+	PICOW_HTTP_ASSERT(async_context_add_at_time_worker_in_ms(
+				  ctx, wrk, RSSI_INTVL_MS));
 }
 
 /*
@@ -215,7 +176,6 @@ core1_main(void)
 	irq_set_enabled(ADC_IRQ_FIFO, true);
 	adc_run(true);
 
-#if PICO_CYW43_ARCH_THREADSAFE_BACKGROUND
 	/* Wait for the other core to signal that the network link is up. */
 	for (;;) {
 		bool up = false;
@@ -227,8 +187,8 @@ core1_main(void)
 			break;
 		sleep_ms(100);
 	}
-	start_rssi_poll(rssi_update);
-#endif
+	async_context_add_at_time_worker_in_ms(
+		cyw43_arch_async_context(), &rssi_worker, 0);
 
 	for (;;)
 		__wfi();
@@ -319,7 +279,6 @@ main(void)
 		} while (link_status != CYW43_LINK_UP);
 	} while (link_status != CYW43_LINK_UP);
 
-#if PICO_CYW43_ARCH_THREADSAFE_BACKGROUND
 	/*
 	 * In background mode, set linkup to true, so that core1 knows to
 	 * start the timer.
@@ -327,10 +286,6 @@ main(void)
 	critical_section_enter_blocking(&linkup_critsec);
 	linkup = true;
 	critical_section_exit(&linkup_critsec);
-#else
-	/* In poll mode, start the timer on core0. */
-	start_rssi_poll(rssi_poll);
-#endif
 
 	HTTP_LOG_INFO("Connected to " WIFI_SSID);
 
@@ -439,10 +394,6 @@ main(void)
 	 */
 	for (;;) {
 		cyw43_arch_poll();
-		if (rssi_ready) {
-			rssi_ready = false;
-			(void)rssi_update(NULL);
-		}
 		cyw43_arch_wait_for_work_until(
 			make_timeout_time_ms(POLL_SLEEP_MS));
 	}
