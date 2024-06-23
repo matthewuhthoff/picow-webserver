@@ -253,14 +253,12 @@ main(void)
 						  CYW43_AUTH_WPA2_AES_PSK) != 0)
 			continue;
 		do {
-#if PICO_CYW43_ARCH_POLL
 			/*
 			 * In poll mode (pico_cyw43_arch_lwip_poll), we
 			 * must call the polling function here. Not
 			 * necessary in other modes.
 			 */
 			cyw43_arch_poll();
-#endif
 			if ((link_status =
 			     cyw43_tcpip_link_status(&cyw43_state,
 						     CYW43_ITF_STA))
@@ -383,25 +381,23 @@ main(void)
 	HTTP_LOG_INFO("http started");
 	cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);
 
-#if PICO_CYW43_ARCH_POLL
 	/*
 	 * After the server starts, in poll mode we must periodically call
 	 * cyw43_arch_poll(). Check if the timer has set the boolean to
 	 * indicate that timeout for rssi updates has expired.
-	 */
-	for (;;) {
-		cyw43_arch_poll();
-		cyw43_arch_wait_for_work_until(
-			make_timeout_time_ms(POLL_SLEEP_MS));
-	}
-#else
-	/*
+	 *
 	 * Background mode is entirely interrupt-driven. So we use WFI to
 	 * let the processor sleep until an interrupt is called.
 	 */
-	for (;;)
+	for (;;) {
+		cyw43_arch_poll();
+#if PICO_CYW43_ARCH_POLL
+		cyw43_arch_wait_for_work_until(
+			make_timeout_time_ms(POLL_SLEEP_MS));
+#else
 		__wfi();
 #endif
+	}
 
 	/* Unreachable */
 	return 0;
