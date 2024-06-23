@@ -189,9 +189,6 @@ core1_main(void)
 	}
 	async_context_add_at_time_worker_in_ms(
 		cyw43_arch_async_context(), &rssi_worker, 0);
-
-	for (;;)
-		__wfi();
 }
 
 int
