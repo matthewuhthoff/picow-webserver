@@ -19,6 +19,12 @@
 
 #include "tasks.h"
 
+/* For vTaskDelete() */
+#ifdef FREERTOS_MODE
+#include "FreeRTOS.h"
+#include "task.h"
+#endif
+
 /* For LWIP_VERSION_STRING */
 #include "lwip/init.h"
 
@@ -370,4 +376,8 @@ initiate_http(void *params)
 		HTTP_LOG_ERROR("http_init: %d\n", err);
 	HTTP_LOG_INFO("http started");
 	cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);
+
+#ifdef FREERTOS_MODE
+	vTaskDelete(NULL);
+#endif
 }
