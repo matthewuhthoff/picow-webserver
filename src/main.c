@@ -335,30 +335,22 @@ main(void)
 	 *
 	 * See: https://slimhazard.gitlab.io/picow_http/group__resp.html#gac4ee42ee6a8559778bb486dcb6253cfe
 	 */
-	if ((err = register_hndlr_methods(&cfg, "/netinfo", netinfo_handler,
-					  HTTP_METHODS_GET_HEAD, &netinfo))
-	    != ERR_OK) {
-		HTTP_LOG_ERROR("Register /netinfo: %d", err);
-		return -1;
-	}
-	if ((err = register_hndlr_methods(&cfg, "/temp", temp_handler,
-					  HTTP_METHODS_GET_HEAD, NULL))
-	    != ERR_OK) {
-		HTTP_LOG_ERROR("Register /temp: %d", err);
-		return -1;
-	}
-	if ((err = register_hndlr_methods(&cfg, "/led", led_handler,
-					  HTTP_METHODS_GET_HEAD, NULL))
-	    != ERR_OK) {
-		HTTP_LOG_ERROR("Register /led: %d", err);
-		return -1;
-	}
-	if ((err = register_hndlr_methods(&cfg, "/rssi", rssi_handler,
-					  HTTP_METHODS_GET_HEAD, NULL))
-	    != ERR_OK) {
-		HTTP_LOG_ERROR("Register /rssi: %d", err);
-		return -1;
-	}
+	err = register_hndlr_methods(&cfg, "/netinfo", netinfo_handler,
+				     HTTP_METHODS_GET_HEAD, &netinfo);
+	PICOW_HTTP_ASSERT(err == ERR_OK);
+
+	err = register_hndlr_methods(&cfg, "/temp", temp_handler,
+				     HTTP_METHODS_GET_HEAD, NULL);
+	PICOW_HTTP_ASSERT(err == ERR_OK);
+
+	err = register_hndlr_methods(&cfg, "/led", led_handler,
+				     HTTP_METHODS_GET_HEAD, NULL);
+	PICOW_HTTP_ASSERT(err == ERR_OK);
+
+	err = register_hndlr_methods(&cfg, "/rssi", rssi_handler,
+				     HTTP_METHODS_GET_HEAD, NULL);
+	PICOW_HTTP_ASSERT(err == ERR_OK);
+
 
 	/*
 	 * Start the server, and turn on the onboard LED when it's
