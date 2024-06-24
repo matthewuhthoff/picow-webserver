@@ -235,8 +235,10 @@ main(void)
 	 * Initialize networking in station mode, and connect to the
 	 * access point passed in as WIFI_SSID.
 	 */
-	if (cyw43_arch_init() != 0)
-		return -1;
+	if (cyw43_arch_init() != 0) {
+		HTTP_LOG_ERROR("Network architecture initialization failed");
+		exit(-1);
+	}
 
 	cyw43_arch_enable_sta_mode();
 	HTTP_LOG_INFO("Connecting to " WIFI_SSID " ...");
