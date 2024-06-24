@@ -234,8 +234,8 @@ main_init(void)
 	(void)multicore_fifo_pop_blocking();
 }
 
-int
-main(void)
+void
+initiate_http(void *params)
 {
 	struct server *srv;
 	struct server_cfg cfg;
@@ -243,11 +243,7 @@ main(void)
 	struct netif *netif;
 	uint8_t mac[6];
 	err_t err;
-
-	main_init();
-
-	/* Launch core1. */
-	multicore_launch_core1(core1_main);
+	(void)params;
 
 	/*
 	 * HTTP log output uses the configuration for pico_stdio.
@@ -388,6 +384,19 @@ main(void)
 		HTTP_LOG_ERROR("http_init: %d\n", err);
 	HTTP_LOG_INFO("http started");
 	cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);
+}
+
+int
+main(void)
+{
+	/* Global initialization */
+	main_init();
+
+	/* Launch asynchronous temperature and rssi updates on core1. */
+	multicore_launch_core1(core1_main);
+
+	/* Get the WiFi connection and start the http server. */
+	initiate_http(NULL);
 
 	/*
 	 * After the server starts, in poll mode we must periodically call
