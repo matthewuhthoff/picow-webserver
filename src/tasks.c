@@ -17,6 +17,8 @@
 #include "hardware/regs/adc.h"
 #include "hardware/sync.h"
 
+#include "tasks.h"
+
 /* For LWIP_VERSION_STRING */
 #include "lwip/init.h"
 
@@ -33,10 +35,6 @@
  */
 #include "picow_http/http.h"
 #include "handlers.h"
-
-#if PICO_CYW43_ARCH_POLL
-#define POLL_SLEEP_MS (1)
-#endif
 
 #define ADC_TEMP_CH (4)
 /*
@@ -66,7 +64,7 @@ static critical_section_t temp_critsec, rssi_critsec;
  * The linkup semaphore is signaled when the TCP/IP link is up, so that
  * core1 knows that the periodic rssi updates may begin.
  */
-static semaphore_t linkup;
+semaphore_t linkup;
 
 /* at-time worker for rssi updates */
 static void rssi_work(async_context_t *context, async_at_time_worker_t *worker);
@@ -186,18 +184,6 @@ initiate_rssi(void *params)
 	sem_acquire_blocking(up);
 	async_context_add_at_time_worker_in_ms(
 		cyw43_arch_async_context(), &rssi_worker, 0);
-}
-
-/*
- * The main function for core1 initiates the asynchronous processes that
- * read the temperature and rssi. This function can then exit; everything
- * on the core is then IRQ- and timer-driven.
- */
-void
-core1_main(void)
-{
-	initiate_temp(NULL);
-	initiate_rssi(&linkup);
 }
 
 void
@@ -384,38 +370,4 @@ initiate_http(void *params)
 		HTTP_LOG_ERROR("http_init: %d\n", err);
 	HTTP_LOG_INFO("http started");
 	cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);
-}
-
-int
-main(void)
-{
-	/* Global initialization */
-	main_init();
-
-	/* Launch asynchronous temperature and rssi updates on core1. */
-	multicore_launch_core1(core1_main);
-
-	/* Get the WiFi connection and start the http server. */
-	initiate_http(NULL);
-
-	/*
-	 * After the server starts, in poll mode we must periodically call
-	 * cyw43_arch_poll(). Check if the timer has set the boolean to
-	 * indicate that timeout for rssi updates has expired.
-	 *
-	 * Background mode is entirely interrupt-driven. So we use WFI to
-	 * let the processor sleep until an interrupt is called.
-	 */
-	for (;;) {
-		cyw43_arch_poll();
-#if PICO_CYW43_ARCH_POLL
-		cyw43_arch_wait_for_work_until(
-			make_timeout_time_ms(POLL_SLEEP_MS));
-#else
-		__wfi();
-#endif
-	}
-
-	/* Unreachable */
-	return 0;
 }

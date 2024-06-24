@@ -51,11 +51,12 @@ endif()
 # The following definitions summarize elements that the different
 # excutables have in common.
 
-# Source files
+# Common source files
 # We use the sample lwipopts.h definition from picow-http.
 # See: https://gitlab.com/slimhazard/picow_http/-/wikis/Configuring-lwipopts.h
 set(SRCS
-	${CMAKE_CURRENT_LIST_DIR}/src/main.c
+	${CMAKE_CURRENT_LIST_DIR}/src/tasks.c
+	${CMAKE_CURRENT_LIST_DIR}/src/tasks.h
 	${CMAKE_CURRENT_LIST_DIR}/src/handlers.c
 	${CMAKE_CURRENT_LIST_DIR}/src/handlers.h
 	${CMAKE_CURRENT_LIST_DIR}/lib/picow-http/etc/lwipopts.h
@@ -97,7 +98,10 @@ set(LIBS
 ## threadsafe background mode, without TLS
 ##
 
-add_executable(picow-http-example-background ${SRCS})
+add_executable(picow-http-example-background
+	${CMAKE_CURRENT_LIST_DIR}/src/main-non-freertos.c
+	${SRCS}
+)
 
 # PICOW_HTTPS indicates TLS support (used for binary info).
 target_compile_definitions(picow-http-example-background PRIVATE
@@ -153,7 +157,10 @@ pico_set_program_url(picow-http-example-background
 ## poll mode, without TLS
 ##
 
-add_executable(picow-http-example-poll ${SRCS})
+add_executable(picow-http-example-poll
+	${CMAKE_CURRENT_LIST_DIR}/src/main-non-freertos.c
+	${SRCS}
+)
 
 target_compile_definitions(picow-http-example-poll PRIVATE
 	WIFI_SSID=\"${WIFI_SSID}\"
@@ -212,7 +219,10 @@ set(HTTPS_WWWSRCS
 	${CMAKE_CURRENT_LIST_DIR}/www/crt/picow-sample.key
 )
 
-add_executable(picow-https-example-background ${HTTPS_SRCS})
+add_executable(picow-https-example-background
+	${CMAKE_CURRENT_LIST_DIR}/src/main-non-freertos.c
+	${HTTPS_SRCS}
+)
 
 target_compile_definitions(picow-https-example-background PRIVATE
 	WIFI_SSID=\"${WIFI_SSID}\"
@@ -257,7 +267,10 @@ pico_set_program_url(picow-https-example-background
 ## poll mode, with TLS
 ##
 
-add_executable(picow-https-example-poll ${HTTPS_SRCS})
+add_executable(picow-https-example-poll
+	${CMAKE_CURRENT_LIST_DIR}/src/main-non-freertos.c
+	${HTTPS_SRCS}
+)
 
 target_compile_definitions(picow-https-example-poll PRIVATE
 	WIFI_SSID=\"${WIFI_SSID}\"
