@@ -19,7 +19,7 @@
 
 #include "tasks.h"
 
-/* For vTaskDelete() */
+/* For vTaskDelete() and tskKERNEL_VERSION_NUMBER */
 #ifdef FREERTOS_CORES
 #include "FreeRTOS.h"
 #include "task.h"
@@ -210,6 +210,20 @@ main_init(void)
 	bi_decl(bi_program_feature("lwIP version: " LWIP_VERSION_STRING));
 #if PICO_CYW43_ARCH_POLL
 	bi_decl(bi_program_feature("arch: poll"));
+#elif defined(FREERTOS_CORES)
+	bi_decl(bi_program_feature("arch: FreeRTOS"));
+	bi_decl(bi_program_feature(
+			"FreeRTOS version: " tskKERNEL_VERSION_NUMBER));
+# if FREERTOS_CORES == 1
+	bi_decl(bi_program_feature("scheduling: single core"));
+# else
+	bi_decl(bi_program_feature("scheduling: SMP"));
+# endif
+# if NO_SYS == 0
+	bi_decl(bi_program_feature("NO_SYS: 0"));
+# else
+	bi_decl(bi_program_feature("NO_SYS: 1"));
+# endif
 #elif PICO_CYW43_ARCH_THREADSAFE_BACKGROUND
 	bi_decl(bi_program_feature("arch: threadsafe background"));
 #endif
