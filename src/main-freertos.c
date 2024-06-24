@@ -19,6 +19,13 @@
 #define TASK_PRIO (tskIDLE_PRIORITY + 1UL)
 #define PICO_STACK_WORDS (PICO_STACK_SIZE / sizeof(configSTACK_DEPTH_TYPE))
 
+/* https initialization requires a larger stack. */
+#if PICOW_HTTPS
+#define HTTP_STACK_SIZE (2 * PICO_STACK_WORDS)
+#else
+#define HTTP_STACK_SIZE (PICO_STACK_WORDS)
+#endif
+
 #ifndef FREE_RTOS_KERNEL_SMP
 
 /*
@@ -48,7 +55,7 @@ main(void)
 	 * Create a task that gets the WiFi connection and starts the http
 	 * server.
 	 */
-	if ((ret = xTaskCreate(initiate_http, "http", PICO_STACK_WORDS, NULL,
+	if ((ret = xTaskCreate(initiate_http, "http", HTTP_STACK_SIZE, NULL,
 			       TASK_PRIO, NULL)) != pdPASS) {
 		HTTP_LOG_ERROR("Failed to create http task: %d", ret);
 		exit(-1);
@@ -90,7 +97,7 @@ main(void)
 		HTTP_LOG_ERROR("Failed to create rssi task: %d", ret);
 		exit(-1);
 	}
-	if ((ret = xTaskCreate(initiate_http, "http", PICO_STACK_WORDS, NULL,
+	if ((ret = xTaskCreate(initiate_http, "http", HTTP_STACK_SIZE, NULL,
 			       TASK_PRIO + 1, &http_task)) != pdPASS) {
 		HTTP_LOG_ERROR("Failed to create http task: %d", ret);
 		exit(-1);

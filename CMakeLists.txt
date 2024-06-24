@@ -385,6 +385,53 @@ if (${HAVE_FREERTOS} STREQUAL "SINGLE")
 	pico_set_program_url(picow-http-example-sys-single
 		"https://gitlab.com/slimhazard/picow-http-example"
 	)
+
+	##
+	## Single-core FreeRTOS in sys mode, with TLS
+	##
+	add_executable(picow-https-example-sys-single
+		${CMAKE_CURRENT_LIST_DIR}/src/main-freertos.c
+		${HTTPS_SRCS}
+	)
+
+	target_compile_definitions(picow-https-example-sys-single PRIVATE
+		WIFI_SSID=\"${WIFI_SSID}\"
+		WIFI_PASSWORD=\"${WIFI_PASSWORD}\"
+		PICOW_HTTPS=1
+		FREERTOS_CORES=1
+		NO_SYS=0
+	)
+
+	target_include_directories(picow-https-example-sys-single PRIVATE
+		${INCLUDES}
+	)
+
+	target_link_libraries(picow-https-example-sys-single
+		picow_https
+		pico_cyw43_arch_lwip_sys_freertos
+		${LIBS}
+		FreeRTOS-Kernel-Heap4
+	)
+
+	picow_http_gen_handlers(picow-https-example-sys-single
+		${CMAKE_CURRENT_SOURCE_DIR}/www/www_https.yaml
+		${CMAKE_CURRENT_SOURCE_DIR}/www
+		${WWWSRCS}
+	)
+
+	pico_enable_stdio_usb(picow-https-example-sys-single 0)
+	pico_enable_stdio_uart(picow-https-example-sys-single 1)
+
+	pico_add_extra_outputs(picow-https-example-sys-single)
+
+	picoprobe_add_flash_target(picow-https-example-sys-single)
+
+	pico_set_program_description(picow-https-example-sys-single
+		"example app for the picow-http library"
+	)
+	pico_set_program_url(picow-https-example-sys-single
+		"https://gitlab.com/slimhazard/picow-http-example"
+	)
 elseif(${HAVE_FREERTOS} STREQUAL "SMP")
 	##
 	## SMP FreeRTOS in sys mode, without TLS
@@ -478,6 +525,8 @@ if (${HAVE_FREERTOS} STREQUAL "SINGLE")
 		PROGRAM_VERSION="${PROGRAM_VERSION}"
 	)
 	pico_set_program_version(picow-http-example-sys-single
+	                         ${PROGRAM_VERSION})
+	pico_set_program_version(picow-https-example-sys-single
 	                         ${PROGRAM_VERSION})
 elseif(${HAVE_FREERTOS} STREQUAL "SMP")
 	target_compile_definitions(picow-http-example-sys-smp PRIVATE
