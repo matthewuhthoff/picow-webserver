@@ -200,16 +200,9 @@ core1_main(void)
 	initiate_rssi(&linkup);
 }
 
-int
-main(void)
+void
+main_init(void)
 {
-	struct server *srv;
-	struct server_cfg cfg;
-	int link_status = CYW43_LINK_DOWN;
-	struct netif *netif;
-	uint8_t mac[6];
-	err_t err;
-
 	/* For picotool info */
 	bi_decl(bi_program_feature("hostname: " CYW43_HOST_NAME));
 	bi_decl(bi_program_feature("AP SSID: " WIFI_SSID));
@@ -239,6 +232,19 @@ main(void)
 	busy_wait_ms(5);
 	multicore_reset_core1();
 	(void)multicore_fifo_pop_blocking();
+}
+
+int
+main(void)
+{
+	struct server *srv;
+	struct server_cfg cfg;
+	int link_status = CYW43_LINK_DOWN;
+	struct netif *netif;
+	uint8_t mac[6];
+	err_t err;
+
+	main_init();
 
 	/* Launch core1. */
 	multicore_launch_core1(core1_main);
