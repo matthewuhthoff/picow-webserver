@@ -151,19 +151,15 @@ rssi_work(async_context_t *ctx, async_at_time_worker_t *wrk)
 }
 
 /*
- * main function for core1.
- *
  * Configure the ADC in free-running mode to read from the temperature
  * sensor, and set the ADC FIFO to length 1. Configure temp_isr() as
  * the interrupt handler to run when the ADC writes to the FIFO.
- *
- * In background mode, the repeating timer (from the SDK's pico_time) runs
- * periodically to get the current rssi value. Wait until the network link
- * is up before starting the timer.
  */
 void
-core1_main(void)
+initiate_temp(void *params)
 {
+	(void)params;
+
 	/* Initiate asynchronous ADC temperature sensor reads */
 	adc_init();
 	adc_set_temp_sensor_enabled(true);
@@ -176,11 +172,32 @@ core1_main(void)
 	adc_irq_set_enabled(true);
 	irq_set_enabled(ADC_IRQ_FIFO, true);
 	adc_run(true);
+}
 
-	/* Wait for the other core to signal that the network link is up. */
-	sem_acquire_blocking(&linkup);
+/*
+ * Wait for the other core to signal that the network link is up, then
+ * start the worker that periodically reads the rssi value.
+ */
+void
+initiate_rssi(void *params)
+{
+	struct semaphore *up = params;
+
+	sem_acquire_blocking(up);
 	async_context_add_at_time_worker_in_ms(
 		cyw43_arch_async_context(), &rssi_worker, 0);
+}
+
+/*
+ * The main function for core1 initiates the asynchronous processes that
+ * read the temperature and rssi. This function can then exit; everything
+ * on the core is then IRQ- and timer-driven.
+ */
+void
+core1_main(void)
+{
+	initiate_temp(NULL);
+	initiate_rssi(&linkup);
 }
 
 int
