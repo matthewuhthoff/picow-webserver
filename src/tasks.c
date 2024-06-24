@@ -212,6 +212,12 @@ main_init(void)
 	bi_decl(bi_program_feature("TLS: no"));
 #endif
 
+	/*
+	 * HTTP log output uses the configuration for pico_stdio.
+	 * Here we initalize UART for output only.
+	 */
+	stdout_uart_init();
+
 	/* Initialize the critical sections and semaphore */
 	critical_section_init(&temp_critsec);
 	critical_section_init(&rssi_critsec);
@@ -236,12 +242,6 @@ initiate_http(void *params)
 	uint8_t mac[6];
 	err_t err;
 	(void)params;
-
-	/*
-	 * HTTP log output uses the configuration for pico_stdio.
-	 * Here we initalize UART for output only.
-	 */
-	stdout_uart_init();
 
 	/*
 	 * Initialize networking in station mode, and connect to the
