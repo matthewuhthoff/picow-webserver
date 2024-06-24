@@ -503,34 +503,16 @@ else()
 endif()
 message("version: ${PROGRAM_VERSION}")
 
-target_compile_definitions(picow-http-example-background PRIVATE
-	PROGRAM_VERSION="${PROGRAM_VERSION}"
-)
-target_compile_definitions(picow-http-example-poll PRIVATE
-	PROGRAM_VERSION="${PROGRAM_VERSION}"
-)
-target_compile_definitions(picow-https-example-background PRIVATE
-	PROGRAM_VERSION="${PROGRAM_VERSION}"
-)
-target_compile_definitions(picow-https-example-poll PRIVATE
-	PROGRAM_VERSION="${PROGRAM_VERSION}"
-)
 pico_set_program_version(picow-http-example-background ${PROGRAM_VERSION})
 pico_set_program_version(picow-http-example-poll ${PROGRAM_VERSION})
 pico_set_program_version(picow-https-example-background ${PROGRAM_VERSION})
 pico_set_program_version(picow-https-example-poll ${PROGRAM_VERSION})
 
 if (${HAVE_FREERTOS} STREQUAL "SINGLE")
-	target_compile_definitions(picow-http-example-sys-single PRIVATE
-		PROGRAM_VERSION="${PROGRAM_VERSION}"
-	)
 	pico_set_program_version(picow-http-example-sys-single
 	                         ${PROGRAM_VERSION})
 	pico_set_program_version(picow-https-example-sys-single
 	                         ${PROGRAM_VERSION})
 elseif(${HAVE_FREERTOS} STREQUAL "SMP")
-	target_compile_definitions(picow-http-example-sys-smp PRIVATE
-		PROGRAM_VERSION="${PROGRAM_VERSION}"
-	)
 	pico_set_program_version(picow-http-example-sys-smp ${PROGRAM_VERSION})
 endif()
