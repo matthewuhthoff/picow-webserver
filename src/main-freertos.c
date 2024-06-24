@@ -19,6 +19,8 @@
 #define TASK_PRIO (tskIDLE_PRIORITY + 1UL)
 #define PICO_STACK_WORDS (PICO_STACK_SIZE / sizeof(configSTACK_DEPTH_TYPE))
 
+#ifndef FREE_RTOS_KERNEL_SMP
+
 /*
  * For the single-core FreeRTOS version, the main function for core1 is
  * identical to that of the non-FreeRTOS version -- it initiates
@@ -58,3 +60,52 @@ main(void)
 	/* Unreachable */
 	return 0;
 }
+
+#else // FreeRTOS SMP
+
+#if !configUSE_CORE_AFFINITY
+#error "configUSE_CORE_AFFINITY false for FreeRTOS SMP"
+#endif
+
+int
+main(void)
+{
+	BaseType_t ret;
+	TaskHandle_t temp_task, rssi_task, http_task;
+
+	/* Global initialization */
+	main_init();
+
+	/*
+	 * Create a task that gets the WiFi connection and starts the http
+	 * server.
+	 */
+	if ((ret = xTaskCreate(initiate_temp, "temp", configMINIMAL_STACK_SIZE,
+			       NULL, TASK_PRIO, &temp_task)) != pdPASS) {
+		HTTP_LOG_ERROR("Failed to create temp task: %d", ret);
+		exit(-1);
+	}
+	if ((ret = xTaskCreate(initiate_rssi, "rssi", configMINIMAL_STACK_SIZE,
+			       &linkup, TASK_PRIO, &rssi_task)) != pdPASS) {
+		HTTP_LOG_ERROR("Failed to create rssi task: %d", ret);
+		exit(-1);
+	}
+	if ((ret = xTaskCreate(initiate_http, "http", PICO_STACK_WORDS, NULL,
+			       TASK_PRIO + 1, &http_task)) != pdPASS) {
+		HTTP_LOG_ERROR("Failed to create http task: %d", ret);
+		exit(-1);
+	}
+
+# if NO_SYS
+	vTaskCoreAffinitySet(http_task, 1);
+	vTaskCoreAffinitySet(temp_task, 2);
+	vTaskCoreAffinitySet(rssi_task, 2);
+# endif
+
+	vTaskStartScheduler();
+
+	/* Unreachable */
+	return 0;
+}
+
+#endif

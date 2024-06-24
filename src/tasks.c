@@ -20,7 +20,7 @@
 #include "tasks.h"
 
 /* For vTaskDelete() */
-#ifdef FREERTOS_MODE
+#ifdef FREERTOS_CORES
 #include "FreeRTOS.h"
 #include "task.h"
 #endif
@@ -176,6 +176,10 @@ initiate_temp(void *params)
 	adc_irq_set_enabled(true);
 	irq_set_enabled(ADC_IRQ_FIFO, true);
 	adc_run(true);
+
+#if FREERTOS_CORES == 2
+	vTaskDelete(NULL);
+#endif
 }
 
 /*
@@ -190,6 +194,10 @@ initiate_rssi(void *params)
 	sem_acquire_blocking(up);
 	async_context_add_at_time_worker_in_ms(
 		cyw43_arch_async_context(), &rssi_worker, 0);
+
+#if FREERTOS_CORES == 2
+	vTaskDelete(NULL);
+#endif
 }
 
 void
@@ -377,7 +385,7 @@ initiate_http(void *params)
 	HTTP_LOG_INFO("http started");
 	cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);
 
-#ifdef FREERTOS_MODE
+#ifdef FREERTOS_CORES
 	vTaskDelete(NULL);
 #endif
 }
