@@ -54,18 +54,19 @@
 
 /* Raw ADC reading for the temperature sensor. */
 static volatile uint16_t temp_adc_raw = UINT16_MAX;
-/*
- * linkup is true when the TCP/IP link is up, so that core1 knows that the
- * periodic rssi updates may begin.
- */
-static volatile bool linkup = false;
 /* The most recent rssi value for our access point */
 static volatile int32_t rssi = INT32_MAX;
 /* Struct for network information, passed to the /netinfo handler */
 static struct netinfo netinfo;
 
 /* Critical sections to protect access to shared data */
-static critical_section_t temp_critsec, rssi_critsec, linkup_critsec;
+static critical_section_t temp_critsec, rssi_critsec;
+
+/*
+ * The linkup semaphore is signaled when the TCP/IP link is up, so that
+ * core1 knows that the periodic rssi updates may begin.
+ */
+static semaphore_t linkup;
 
 /* at-time worker for rssi updates */
 static void rssi_work(async_context_t *context, async_at_time_worker_t *worker);
@@ -177,16 +178,7 @@ core1_main(void)
 	adc_run(true);
 
 	/* Wait for the other core to signal that the network link is up. */
-	for (;;) {
-		bool up = false;
-
-		critical_section_enter_blocking(&linkup_critsec);
-		up = linkup;
-		critical_section_exit(&linkup_critsec);
-		if (up)
-			break;
-		sleep_ms(100);
-	}
+	sem_acquire_blocking(&linkup);
 	async_context_add_at_time_worker_in_ms(
 		cyw43_arch_async_context(), &rssi_worker, 0);
 }
@@ -218,10 +210,10 @@ main(void)
 	bi_decl(bi_program_feature("TLS: no"));
 #endif
 
-	/* Initialize the critical sections */
+	/* Initialize the critical sections and semaphore */
 	critical_section_init(&temp_critsec);
-	critical_section_init(&linkup_critsec);
 	critical_section_init(&rssi_critsec);
+	sem_init(&linkup, 0, 1);
 
 	/*
 	 * Launch core1. The code preceding multicore_launch_core1()
@@ -275,12 +267,10 @@ main(void)
 	} while (link_status != CYW43_LINK_UP);
 
 	/*
-	 * In background mode, set linkup to true, so that core1 knows to
-	 * start the timer.
+	 * Signal the other core that the link is up, so that it knows to
+	 * start rssi updates.
 	 */
-	critical_section_enter_blocking(&linkup_critsec);
-	linkup = true;
-	critical_section_exit(&linkup_critsec);
+	sem_release(&linkup);
 
 	HTTP_LOG_INFO("Connected to " WIFI_SSID);
 
