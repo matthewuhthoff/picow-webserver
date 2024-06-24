@@ -79,6 +79,18 @@ static async_at_time_worker_t rssi_worker = {
 	.user_data = NULL,
 };
 
+#ifdef FREERTOS_CORES
+static inline void delay_ms(uint32_t ms)
+{
+        vTaskDelay(ms / portTICK_PERIOD_MS);
+}
+#else
+static inline void delay_ms(uint32_t ms)
+{
+        sleep_ms(ms);
+}
+#endif
+
 /*
  * ISR for ADC_IRQ_FIFO, called when the ADC writes a value to its
  * FIFO. Save the raw ADC value in temp_adc_raw, protected by a critical
@@ -297,7 +309,7 @@ initiate_http(void *params)
 						link_status);
 					break;
 				}
-				sleep_ms(100);
+				delay_ms(100);
 			}
 		} while (link_status != CYW43_LINK_UP);
 	} while (link_status != CYW43_LINK_UP);
