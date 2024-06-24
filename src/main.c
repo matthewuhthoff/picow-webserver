@@ -216,13 +216,14 @@ main(void)
 	sem_init(&linkup, 0, 1);
 
 	/*
-	 * Launch core1. The code preceding multicore_launch_core1()
-	 * ensures that core1 is properly reset when a reset is initiated
-	 * by openocd.
+	 * This is necessary to ensure that core1 launches properly after
+	 * boot or reset (a quirk of the RP2040).
 	 */
-	sleep_ms(5);
+	busy_wait_ms(5);
 	multicore_reset_core1();
-	sleep_ms(5);
+	(void)multicore_fifo_pop_blocking();
+
+	/* Launch core1. */
 	multicore_launch_core1(core1_main);
 
 	/*
