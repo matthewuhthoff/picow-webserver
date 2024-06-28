@@ -20,7 +20,7 @@
 #include "tasks.h"
 
 /* For vTaskDelete() and tskKERNEL_VERSION_NUMBER */
-#ifdef FREERTOS_CORES
+#if HAVE_FREERTOS
 #include "FreeRTOS.h"
 #include "task.h"
 #endif
@@ -79,7 +79,7 @@ static async_at_time_worker_t rssi_worker = {
 	.user_data = NULL,
 };
 
-#ifdef FREERTOS_CORES
+#if HAVE_FREERTOS
 static inline void delay_ms(uint32_t ms)
 {
         vTaskDelay(ms / portTICK_PERIOD_MS);
@@ -189,7 +189,7 @@ initiate_temp(void *params)
 	irq_set_enabled(ADC_IRQ_FIFO, true);
 	adc_run(true);
 
-#if FREERTOS_CORES == 2
+#if HAVE_FREERTOS
 	vTaskDelete(NULL);
 #endif
 }
@@ -207,7 +207,7 @@ initiate_rssi(void *params)
 	async_context_add_at_time_worker_in_ms(
 		cyw43_arch_async_context(), &rssi_worker, 0);
 
-#if FREERTOS_CORES == 2
+#if HAVE_FREERTOS
 	vTaskDelete(NULL);
 #endif
 }
@@ -222,20 +222,10 @@ main_init(void)
 	bi_decl(bi_program_feature("lwIP version: " LWIP_VERSION_STRING));
 #if PICO_CYW43_ARCH_POLL
 	bi_decl(bi_program_feature("arch: poll"));
-#elif defined(FREERTOS_CORES)
+#elif HAVE_FREERTOS
 	bi_decl(bi_program_feature("arch: FreeRTOS"));
 	bi_decl(bi_program_feature(
 			"FreeRTOS version: " tskKERNEL_VERSION_NUMBER));
-# if FREERTOS_CORES == 1
-	bi_decl(bi_program_feature("scheduling: single core"));
-# else
-	bi_decl(bi_program_feature("scheduling: SMP"));
-# endif
-# if NO_SYS == 0
-	bi_decl(bi_program_feature("NO_SYS: 0"));
-# else
-	bi_decl(bi_program_feature("NO_SYS: 1"));
-# endif
 #elif PICO_CYW43_ARCH_THREADSAFE_BACKGROUND
 	bi_decl(bi_program_feature("arch: threadsafe background"));
 #endif
@@ -313,6 +303,7 @@ initiate_http(void *params)
 			}
 		} while (link_status != CYW43_LINK_UP);
 	} while (link_status != CYW43_LINK_UP);
+
 
 	/*
 	 * Signal the other core that the link is up, so that it knows to
@@ -411,7 +402,7 @@ initiate_http(void *params)
 	HTTP_LOG_INFO("http started");
 	cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);
 
-#ifdef FREERTOS_CORES
+#if HAVE_FREERTOS
 	vTaskDelete(NULL);
 #endif
 }
