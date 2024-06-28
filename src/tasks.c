@@ -44,8 +44,8 @@
 
 #define ADC_TEMP_CH (4)
 /*
- * Maximum value for the ADC clock divider. Results in about 7.6 Hz, or
- * approximately one measurement every 131 ms.
+ * Maximum value for the ADC clock divider. Results in about 732 Hz, or
+ * approximately one measurement every 1.3 ms.
  */
 #define ADC_MAX_CLKDIV (65535.f + 255.f/256.f)
 
