@@ -52,7 +52,7 @@
 /*
  * Interval between rssi updates in ms (for a repeating_timer).
  */
-#define RSSI_INTVL_MS (5 * 1000)
+#define RSSI_INTVL_MS (500)
 
 /* The following values are shared between the two cores. */
 
