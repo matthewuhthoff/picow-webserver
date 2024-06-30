@@ -51,7 +51,7 @@ main(void)
 	PICOW_HTTP_ASSERT(ret == pdPASS);
 
 	ret = xTaskCreate(initiate_http, "http", HTTP_STACK_SIZE, NULL,
-			  TASK_PRIO + 1, &http_task);
+			  TASK_PRIO, &http_task);
 	PICOW_HTTP_ASSERT(ret == pdPASS);
 
 	vTaskStartScheduler();
