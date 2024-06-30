@@ -314,8 +314,10 @@ pico_set_program_url(picow-https-example-poll
 )
 
 ##
-## Note: we only build FreeRTOS sample apps with NO_SYS=0,
-## or sys mode. NO_SYS=1 (or nosys) is currently not supported by picow-http.
+## Note: we only build FreeRTOS sample apps with NO_SYS=0, or sys
+## mode. NO_SYS=1 (or nosys) is currently not supported by picow-http.
+## NO_SYS=0 is set by default for FreeRTOS builds in picow-http's
+## sample lwipopts.h.
 ##
 ## Also, currently only SMP, since single-core mode is in need of
 ## clarification (see pick-sdk issue 1775).
@@ -333,7 +335,6 @@ target_compile_definitions(picow-http-example-freertos-sys-smp PRIVATE
 	WIFI_PASSWORD=\"${WIFI_PASSWORD}\"
 	PICOW_HTTPS=0
 	HAVE_FREERTOS=1
-	NO_SYS=0
 )
 
 target_include_directories(picow-http-example-freertos-sys-smp PRIVATE
@@ -380,7 +381,6 @@ target_compile_definitions(picow-https-example-freertos-sys-smp PRIVATE
 	WIFI_PASSWORD=\"${WIFI_PASSWORD}\"
 	PICOW_HTTPS=1
 	HAVE_FREERTOS=1
-	NO_SYS=0
 )
 
 target_include_directories(picow-https-example-freertos-sys-smp PRIVATE
