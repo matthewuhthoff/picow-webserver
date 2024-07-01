@@ -5,6 +5,12 @@
  * See LICENSE
  */
 
+/*
+ * The main() function, and core1_main() function run on core1, for both
+ * of the non-FreeRTOS implementations -- threadsafe background mode and
+ * poll mode.
+ */
+
 #include "pico/cyw43_arch.h"
 #include "pico/multicore.h"
 
