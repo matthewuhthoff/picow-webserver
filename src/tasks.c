@@ -5,6 +5,19 @@
  * See LICENSE
  */
 
+/*
+ * Initialization tasks and asynchronous processes that are run under both
+ * FreeRTOS and non-FreeRTOS modes; the latter are threadsafe background
+ * mode and poll mode. Except where conditional code depends on
+ * HAVE_FREERTOS (which is defined in CMakeLists.txt), the code is
+ * identical for all implementations.
+ *
+ * The initialization functions end with vTaskDelete(NULL) in the FreeRTOS
+ * implementation. Since these only run once as FreeRTOS tasks, they must
+ * call vTaskDelete() (to delete themselves) before returning to the
+ * scheduler.
+ */
+
 #include <stdio.h>
 #include <stdint.h>
 
@@ -50,7 +63,7 @@
 #define ADC_MAX_CLKDIV (65535.f + 255.f/256.f)
 
 /*
- * Interval between rssi updates in ms (for a repeating_timer).
+ * Interval between rssi updates in ms (for an async_context at-time worker).
  */
 #define RSSI_INTVL_MS (500)
 
@@ -189,6 +202,10 @@ initiate_temp(void *params)
 	irq_set_enabled(ADC_IRQ_FIFO, true);
 	adc_run(true);
 
+	/*
+	 * Under FreeRTOS, delete the current task before returning to the
+	 * scheduler.
+	 */
 #if HAVE_FREERTOS
 	vTaskDelete(NULL);
 #endif
@@ -212,6 +229,15 @@ initiate_rssi(void *params)
 #endif
 }
 
+/*
+ * Common initialization code run in main() for FreeRTOS and non-FreeRTOS
+ * implementations.
+ *
+ * - define binary info, displayed by picotool info
+ * - initialize UART for logging output
+ * - initialize the critical sections and the semaphore
+ * - reset core1
+ */
 void
 main_init(void)
 {
@@ -256,6 +282,20 @@ main_init(void)
 	(void)multicore_fifo_pop_blocking();
 }
 
+/*
+ * See the comment in tasks.h.
+ *
+ * - initialize networking in station mode
+ * - get the connection with the AP defined by the WIFI_SSID and
+ *   WIFI_PASSWORD build parameters.
+ * - signal the semaphore when the connection reaches the linkup state
+ * - store the IP and mac addresses, to be returned for the /netinfo
+ *   endpoint
+ * - configure the http server
+ * - register custom response handlers
+ * - start the http server with http_srv_init()
+ * - turn on the onboard LED
+ */
 void
 initiate_http(void *params)
 {
