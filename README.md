@@ -186,19 +186,26 @@ deploy.
 
 ### Deploying the app
 
-This project builds _four_ versions of the binary:
+This project builds _six_ versions of the binary:
 
   * `picow-http-example-background`
   * `picow-http-example-poll`
+  * `picow-http-example-freertos-sys-smp`
   * `picow-https-example-background`
   * `picow-https-example-poll`
+  * `picow-https-example-freertos-sys-smp`
 
 These result from permutations of:
 
-  * the two network architectures that are currently supported
-    by picow-http: threadsafe background mode and poll mode; see the [SDK
+  * the three network architectures that are currently supported
+    by picow-http (see the [SDK
     docs](https://raspberrypi.github.io/pico-sdk-doxygen/group__pico__cyw43__arch.html)
-    for details. 
+    for details about network architectures):
+    * threadsafe background mode
+    * poll mode
+    * FreeRTOS in "sys" mode (`NO_SYS=0`) using [symmetric
+      multiprocessing](https://www.freertos.org/symmetric-multiprocessing-introduction.html)
+      (SMP)
   * versions with or without TLS support (linking with `picow_https`
     or `picow_http`, respectively)
 
@@ -237,8 +244,10 @@ $ make flash-picow-http-example-background
 
 # Similarly any of:
 $ make flash-picow-http-example-poll
+$ make flash-picow-http-example-freertos-sys-smp
 $ make flash-picow-https-example-background
 $ make flash-picow-https-example-poll
+$ make flash-picow-https-example-freertos-sys-smp
 ```
 
 These commands encapsulate the `openocd` calls that load the binary code.
@@ -344,12 +353,12 @@ File picow-https-example-poll.bin:
 
 Program Information
  name:         picow-https-example-poll
- version:      0.8.0
+ version:      0.10.0
  web site:     https://gitlab.com/slimhazard/picow-http-example
  description:  example app for the picow-http library
  features:     hostname: picow-sample
                AP SSID: my_wifi
-               picow-http version: 0.8.0
+               picow-http version: 0.10.0
                lwIP version: 2.2.0d
                arch: poll
                TLS: yes
