@@ -460,6 +460,53 @@ pico_set_program_url(picow-http-example-freertos-sys-single
 )
 
 ##
+## Single-core FreeRTOS in sys mode, with TLS
+##
+add_executable(picow-https-example-freertos-sys-single
+	${CMAKE_CURRENT_LIST_DIR}/src/main-freertos.c
+	${HTTPS_SRCS}
+)
+
+target_compile_definitions(picow-https-example-freertos-sys-single PRIVATE
+	WIFI_SSID=\"${WIFI_SSID}\"
+	WIFI_PASSWORD=\"${WIFI_PASSWORD}\"
+	PICOW_HTTPS=1
+	HAVE_FREERTOS=1
+	configNUMBER_OF_CORES=1
+)
+
+target_include_directories(picow-https-example-freertos-sys-single PRIVATE
+	${INCLUDES}
+)
+
+target_link_libraries(picow-https-example-freertos-sys-single
+	picow_https
+	pico_cyw43_arch_lwip_sys_freertos
+	${LIBS}
+	FreeRTOS-Kernel-Heap4
+)
+
+picow_http_gen_handlers(picow-https-example-freertos-sys-single
+	${CMAKE_CURRENT_SOURCE_DIR}/www/www_https.yaml
+	${CMAKE_CURRENT_SOURCE_DIR}/www
+	${WWWSRCS}
+)
+
+pico_enable_stdio_usb(picow-https-example-freertos-sys-single 0)
+pico_enable_stdio_uart(picow-https-example-freertos-sys-single 1)
+
+pico_add_extra_outputs(picow-https-example-freertos-sys-single)
+
+picoprobe_add_flash_target(picow-https-example-freertos-sys-single)
+
+pico_set_program_description(picow-https-example-freertos-sys-single
+	"example app for the picow-http library"
+)
+pico_set_program_url(picow-https-example-freertos-sys-single
+	"https://gitlab.com/slimhazard/picow-http-example"
+)
+
+##
 ## Use the output of 'git describe', if available, as the version
 ## string
 ##
