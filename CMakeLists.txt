@@ -536,3 +536,9 @@ pico_set_program_version(picow-http-example-freertos-sys-smp ${PROGRAM_VERSION})
 pico_set_program_version(picow-https-example-freertos-sys-smp
                          ${PROGRAM_VERSION}
 )
+pico_set_program_version(picow-http-example-freertos-sys-single
+                         ${PROGRAM_VERSION}
+)
+pico_set_program_version(picow-https-example-freertos-sys-single
+                         ${PROGRAM_VERSION}
+)
