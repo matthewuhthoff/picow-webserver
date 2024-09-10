@@ -319,8 +319,6 @@ pico_set_program_url(picow-https-example-poll
 ## NO_SYS=0 is set by default for FreeRTOS builds in picow-http's
 ## sample lwipopts.h.
 ##
-## Also, currently only SMP, since single-core mode is in need of
-## clarification (see pick-sdk issue 1775).
 
 ##
 ## SMP FreeRTOS in sys mode, without TLS
@@ -411,6 +409,53 @@ pico_set_program_description(picow-https-example-freertos-sys-smp
 	"example app for the picow-http library"
 )
 pico_set_program_url(picow-https-example-freertos-sys-smp
+	"https://gitlab.com/slimhazard/picow-http-example"
+)
+
+##
+## Single-core FreeRTOS in sys mode, without TLS
+##
+add_executable(picow-http-example-freertos-sys-single
+	${CMAKE_CURRENT_LIST_DIR}/src/main-freertos.c
+	${SRCS}
+)
+
+target_compile_definitions(picow-http-example-freertos-sys-single PRIVATE
+	WIFI_SSID=\"${WIFI_SSID}\"
+	WIFI_PASSWORD=\"${WIFI_PASSWORD}\"
+	PICOW_HTTPS=0
+	HAVE_FREERTOS=1
+	configNUMBER_OF_CORES=1
+)
+
+target_include_directories(picow-http-example-freertos-sys-single PRIVATE
+	${INCLUDES}
+)
+
+target_link_libraries(picow-http-example-freertos-sys-single
+	picow_http
+	pico_cyw43_arch_lwip_sys_freertos
+	${LIBS}
+	FreeRTOS-Kernel-Heap4
+)
+
+picow_http_gen_handlers(picow-http-example-freertos-sys-single
+	${CMAKE_CURRENT_SOURCE_DIR}/www/www.yaml
+	${CMAKE_CURRENT_SOURCE_DIR}/www
+	${WWWSRCS}
+)
+
+pico_enable_stdio_usb(picow-http-example-freertos-sys-single 0)
+pico_enable_stdio_uart(picow-http-example-freertos-sys-single 1)
+
+pico_add_extra_outputs(picow-http-example-freertos-sys-single)
+
+picoprobe_add_flash_target(picow-http-example-freertos-sys-single)
+
+pico_set_program_description(picow-http-example-freertos-sys-single
+	"example app for the picow-http library"
+)
+pico_set_program_url(picow-http-example-freertos-sys-single
 	"https://gitlab.com/slimhazard/picow-http-example"
 )
 

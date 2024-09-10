@@ -194,7 +194,7 @@ initiate_temp(void *params)
 	 * Under FreeRTOS, delete the current task before returning to the
 	 * scheduler.
 	 */
-#if HAVE_FREERTOS
+#if HAVE_FREERTOS && configNUMBER_OF_CORES == 2
 	vTaskDelete(NULL);
 #endif
 }
@@ -268,6 +268,16 @@ main_init(void)
 	busy_wait_ms(5);
 	multicore_reset_core1();
 	(void)multicore_fifo_pop_blocking();
+}
+
+static inline void
+delay_ms(uint32_t ms)
+{
+#if HAVE_FREERTOS
+	vTaskDelay(ms / portTICK_PERIOD_MS);
+#else
+	sleep_ms(ms);
+#endif
 }
 
 /*

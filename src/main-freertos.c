@@ -6,14 +6,10 @@
  */
 
 /*
- * The main function for FreeRTOS implementations of the sample app. Since
- * picow-http requires FreeRTOS with support of symmetric multiprocessing
- * (SMP), fail at compile time if the kernel doesn't support it.
+ * The main function for FreeRTOS implementations of the sample app.
  */
 
-#if !FREE_RTOS_KERNEL_SMP
-#error FreeRTOS version since V11.0.0 is required (with SMP support)
-#endif
+#include "pico/multicore.h"
 
 /* For PICOW_HTTP_ASSERT() */
 #include "picow_http/assertion.h"
@@ -41,6 +37,21 @@
 #define HTTP_STACK_SIZE (PICO_STACK_WORDS)
 #endif
 
+#if !FREE_RTOS_KERNEL_SMP || configNUMBER_OF_CORES == 1
+
+/*
+ * Temperature sensor readings are all IRQ-driven, reading from the
+ * free-running ADC, and do not require a FreeRTOS task or context.
+ * These can run on the non-FreeRTOS core in a single-core version.
+ */
+static void
+core1_main(void)
+{
+	initiate_temp(&linkup);
+}
+
+#endif
+
 int
 main(void)
 {
@@ -50,6 +61,13 @@ main(void)
 	/* Global initialization */
 	main_init();
 
+#if !FREE_RTOS_KERNEL_SMP || configNUMBER_OF_CORES == 1
+	/*
+	 * In the single-core version, initiate temperature sensor
+	 * readings on core1.
+	 */
+	multicore_launch_core1(core1_main);
+#else
 	/*
 	 * Create tasks for all of the initialization functions.
 	 * In debug builds (NDEBUG is not defined), the assertions
@@ -57,13 +75,18 @@ main(void)
 	 *
 	 * The task priorities are set as defined above. The init tasks
 	 * for temperature and rssi measurements only need the smallest
-	 * stack possible for FreeRTOS, which the init task for network
-	 * and the http server needs a larger stack, as defined above in
-	 * HTTP_STACK_SIZE.
+	 * stack possible for FreeRTOS (configMINIMAL_STACK_SIZE).
+	 */
+
+	/*
+	 * In the SMP version, initiate temperature measurements in
+	 * main().  The task scheduler decides what tasks run on which
+	 * core.
 	 */
 	ret = xTaskCreate(initiate_temp, "temp", configMINIMAL_STACK_SIZE,
 			  NULL, TASK_PRIO, &temp_task);
 	PICOW_HTTP_ASSERT(ret == pdPASS);
+#endif
 
 	/*
 	 * Pass in the linkup semaphore, so that the at-time worker for
@@ -74,6 +97,10 @@ main(void)
 			  &linkup, TASK_PRIO, &rssi_task);
 	PICOW_HTTP_ASSERT(ret == pdPASS);
 
+	/*
+	 * The init task for the network and http server needs a
+	 * larger stack, as defined above in HTTP_STACK_SIZE.
+	 */
 	ret = xTaskCreate(initiate_http, "http", HTTP_STACK_SIZE, NULL,
 			  TASK_PRIO, &http_task);
 	PICOW_HTTP_ASSERT(ret == pdPASS);
