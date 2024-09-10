@@ -240,6 +240,11 @@ main_init(void)
 	bi_decl(bi_program_feature("arch: FreeRTOS"));
 	bi_decl(bi_program_feature(
 			"FreeRTOS version: " tskKERNEL_VERSION_NUMBER));
+# if configNUMBER_OF_CORES == 1
+	bi_decl(bi_program_feature("FreeRTOS cores: 1"));
+# else
+	bi_decl(bi_program_feature("FreeRTOS cores: 2"));
+# endif
 #elif PICO_CYW43_ARCH_THREADSAFE_BACKGROUND
 	bi_decl(bi_program_feature("arch: threadsafe background"));
 #endif
