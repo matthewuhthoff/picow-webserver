@@ -557,6 +557,51 @@ if (${PICO_SDK_VERSION_STRING} VERSION_GREATER_EQUAL "2.0.0")
 	pico_set_program_url(picow-http-example-freertos-nosys
 		"https://gitlab.com/slimhazard/picow-http-example"
 	)
+
+	# With TLS
+	add_executable(picow-https-example-freertos-nosys
+		${CMAKE_CURRENT_LIST_DIR}/src/main-freertos.c
+		${HTTPS_SRCS}
+	)
+
+	target_compile_definitions(picow-https-example-freertos-nosys PRIVATE
+		WIFI_SSID=\"${WIFI_SSID}\"
+		WIFI_PASSWORD=\"${WIFI_PASSWORD}\"
+		PICOW_HTTPS=1
+		HAVE_FREERTOS=1
+		NO_SYS=1
+	)
+
+	target_include_directories(picow-https-example-freertos-nosys PRIVATE
+		${INCLUDES}
+	)
+
+	target_link_libraries(picow-https-example-freertos-nosys
+		picow_https
+		pico_cyw43_arch_lwip_threadsafe_background
+		${LIBS}
+		FreeRTOS-Kernel-Heap4
+	)
+
+	picow_http_gen_handlers(picow-https-example-freertos-nosys
+		${CMAKE_CURRENT_SOURCE_DIR}/www/www_https.yaml
+		${CMAKE_CURRENT_SOURCE_DIR}/www
+		${WWWSRCS}
+	)
+
+	pico_enable_stdio_usb(picow-https-example-freertos-nosys 0)
+	pico_enable_stdio_uart(picow-https-example-freertos-nosys 1)
+
+	pico_add_extra_outputs(picow-https-example-freertos-nosys)
+
+	picoprobe_add_flash_target(picow-https-example-freertos-nosys)
+
+	pico_set_program_description(picow-https-example-freertos-nosys
+		"example app for the picow-http library"
+	)
+	pico_set_program_url(picow-https-example-freertos-nosys
+		"https://gitlab.com/slimhazard/picow-http-example"
+	)
 endif()
 
 ##
@@ -598,6 +643,9 @@ pico_set_program_version(picow-https-example-freertos-sys-single
 
 if (${PICO_SDK_VERSION_STRING} VERSION_GREATER_EQUAL "2.0.0")
 	pico_set_program_version(picow-http-example-freertos-nosys
+		${PROGRAM_VERSION}
+	)
+	pico_set_program_version(picow-https-example-freertos-nosys
 		${PROGRAM_VERSION}
 	)
 endif()
