@@ -1,5 +1,9 @@
 cmake_minimum_required(VERSION 3.12)
 
+# Since SDK version 2.0.0, PICO_BOARD must be set prior to the next
+# include() (also works for SDK 1.5.1).
+set(PICO_BOARD pico_w)
+
 # From pico-sdk, to integrate the SDK into the project.
 include(pico_sdk_import.cmake)
 
@@ -19,7 +23,6 @@ include(${CMAKE_CURRENT_LIST_DIR}/FreeRTOS_Kernel_import.cmake)
 project(picow-http-example C CXX ASM)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
-set(PICO_BOARD pico_w)
 
 pico_sdk_init()
 
