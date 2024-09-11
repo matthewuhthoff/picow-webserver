@@ -102,6 +102,9 @@ see the link (at the [picow-http project
 Wiki](https://gitlab.com/slimhazard/picow_http/-/wikis/home)) for
 details.
 
+The app builds and has been tested successfully with [SDK version
+2.0.0](https://github.com/raspberrypi/pico-sdk/releases/tag/2.0.0).
+
 ### Building the app
 
 Start by cloning the repository:
@@ -186,35 +189,55 @@ deploy.
 
 ### Deploying the app
 
-This project builds _six_ versions of the binary:
+This project builds _eight_ versions of the binary when SDK version
+1.5.1 is used, and ten of them with SDK versions since 2.0.0:
 
   * `picow-http-example-background`
   * `picow-http-example-poll`
   * `picow-http-example-freertos-sys-smp`
+  * `picow-http-example-freertos-sys-single`
   * `picow-https-example-background`
   * `picow-https-example-poll`
   * `picow-https-example-freertos-sys-smp`
+  * `picow-https-example-freertos-sys-single`
+
+Builds with SDK since version 2.0.0 also create:
+
+  * `picow-http-example-freertos-nosys`
+  * `picow-https-example-freertos-nosys`
 
 These result from permutations of:
 
-  * the three network architectures that are currently supported
-    by picow-http (see the [SDK
+  * the network architectures that are supported by picow-http (see
+    the [SDK
     docs](https://raspberrypi.github.io/pico-sdk-doxygen/group__pico__cyw43__arch.html)
     for details about network architectures):
     * threadsafe background mode
     * poll mode
-    * FreeRTOS in "sys" mode (`NO_SYS=0`) using [symmetric
-      multiprocessing](https://www.freertos.org/symmetric-multiprocessing-introduction.html)
-      (SMP)
+    * FreeRTOS:
+	  * in lwip OS mode or "sys" mode (`NO_SYS=0`), using:
+	    * [symmetric
+		  multiprocessing](https://www.freertos.org/symmetric-multiprocessing-introduction.html)
+          (SMP), or
+		* single core
+	  * in "nosys" mode, with the SDK since version 2.0.0: `NO_SYS=1`
+	    with the `pico_cyw43_arch_lwip_threadsafe_background` library
   * versions with or without TLS support (linking with `picow_https`
     or `picow_http`, respectively)
 
 The different versions are functionally identical. Their code is
-almost entirely the same; the different choices are realized by
-configuration in `CMakeLists.txt`. Most applications will choose just
-one network architecture, and make one choice about TLS support.
-Since this is an example app, it demonstrates how to realize the
-various possibilities.
+largely the same; the differences are:
+
+  * the choices of network architecture and TLS support are realized
+	by configuration in `CMakeLists.txt`.
+  * initialization code differs for the non-FreeRTOS versions (in
+	[`src/main-non-freertos.c`](src/main-non-freertos.c)) and the
+	FreeRTOS versions (in [`src/main-freertos.c`](src/main-freertos.c)).
+
+Most applications will choose just one network architecture, and make
+one choice about TLS support.  Since this is an example app, it
+demonstrates how to realize the various foundational modes supported
+by picow-http and the SDK.
 
 To build specific versions, rather than all of them at once, use one
 of the binary names shown above as the `make` target:
@@ -232,12 +255,13 @@ in boot select mode. See the [Getting
 Started](https://datasheets.raspberrypi.com/pico/getting-started-with-pico.pdf)
 document for details.
 
-If you are using a picoprobe (see Appendix A in Getting Started), the
-build environment [defines](picoprobe_targets.cmake) targets that
-flash the various binaries to the PicoW:
+If you are using a debugprobe (formerly known as a picoprobe; see
+Appendix A in Getting Started), the build environment
+[defines](picoprobe_targets.cmake) targets that flash the various
+binaries to the PicoW:
 
 ```shell
-# For use with a picoprobe
+# For use with a debugprobe
 
 # Load the version with threadsafe background mode, without TLS support
 $ make flash-picow-http-example-background
@@ -245,9 +269,15 @@ $ make flash-picow-http-example-background
 # Similarly any of:
 $ make flash-picow-http-example-poll
 $ make flash-picow-http-example-freertos-sys-smp
+$ make flash-picow-http-example-freertos-sys-single
 $ make flash-picow-https-example-background
 $ make flash-picow-https-example-poll
 $ make flash-picow-https-example-freertos-sys-smp
+$ make flash-picow-https-example-freertos-sys-single
+
+# Builds with the SDK since version 2.0.0
+$ make flash-picow-http-example-freertos-nosys
+$ make flash-picow-https-example-freertos-nosys
 ```
 
 These commands encapsulate the `openocd` calls that load the binary code.
@@ -320,13 +350,13 @@ to:
 Connecting to my_wifi ...
 Connected to my_wifi
 http started
-192.168.1.1 - - [27/Oct/2022:20:40:10 +0000] "GET / HTTP/1.1" 200 729
-192.168.1.1 - - [27/Oct/2022:20:40:10 +0000] "GET /sample_app.js HTTP/1.1" 200 1497
-192.168.1.1 - - [27/Oct/2022:20:40:10 +0000] "GET /picow.css HTTP/1.1" 200 506
-192.168.1.1 - - [27/Oct/2022:20:40:10 +0000] "GET /temp HTTP/1.1" 200 7
-192.168.1.1 - - [27/Oct/2022:20:40:10 +0000] "GET /img/favicon.png HTTP/1.1" 200 255
-192.168.1.1 - - [27/Oct/2022:20:40:10 +0000] "GET /led HTTP/1.1" 200 1
-192.168.1.1 - - [27/Oct/2022:20:40:10 +0000] "GET /rssi HTTP/1.1" 200 28
+192.168.1.1 - - [10/Sep/2024:11:07:07 +0000] "GET / HTTP/1.1" 200 734
+192.168.1.1 - - [10/Sep/2024:11:07:08 +0000] "GET /picow.css HTTP/1.1" 200 511
+192.168.1.1 - - [10/Sep/2024:11:07:08 +0000] "GET /sample_app.js HTTP/1.1" 200 1499
+192.168.1.1 - - [10/Sep/2024:11:07:08 +0000] "GET /img/favicon.png HTTP/1.1" 200 190
+192.168.1.1 - - [10/Sep/2024:11:07:08 +0000] "GET /temp HTTP/1.1" 200 7
+192.168.1.1 - - [10/Sep/2024:11:07:08 +0000] "GET /led HTTP/1.1" 200 1
+192.168.1.1 - - [10/Sep/2024:11:07:08 +0000] "GET /rssi HTTP/1.1" 200 25
 ```
 
 By default, request logs in [Common Log
@@ -352,18 +382,20 @@ $ picotool info -b -p picow-https-example-poll.bin
 File picow-https-example-poll.bin:
 
 Program Information
- name:         picow-https-example-poll
- version:      0.10.0
- web site:     https://gitlab.com/slimhazard/picow-http-example
- description:  example app for the picow-http library
- features:     hostname: picow-sample
-               AP SSID: my_wifi
-               picow-http version: 0.10.0
-               lwIP version: 2.2.0d
-               arch: poll
-               TLS: yes
-               mbedtls version: 2.28.1
-               UART stdout
+ name:          picow-https-example-poll
+ version:       1.0.0
+ web site:      https://gitlab.com/slimhazard/picow-http-example
+ description:   example app for the picow-http library
+ features:      hostname: picow-sample
+                AP SSID: my_wifi
+                picow-http version: 1.0.0
+                lwIP version: 2.2.0d
+                arch: poll
+                TLS: yes
+                mbedtls version: 2.28.1
+                UART stdout
+ binary start:  0x10000000
+ binary end:    0x1007aa54
 
 Fixed Pin Information
  0:  UART0 TX
