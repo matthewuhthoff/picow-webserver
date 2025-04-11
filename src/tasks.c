@@ -21,7 +21,6 @@
 #include <stdio.h>
 #include <stdint.h>
 
-#include "pico/stdio_uart.h"
 #include "pico/cyw43_arch.h"
 #include "pico/multicore.h"
 #include "pico/sync.h"
@@ -262,9 +261,9 @@ main_init(void)
 
 	/*
 	 * HTTP log output uses the configuration for pico_stdio.
-	 * Here we initalize UART for output only.
+	 * Here we initalize serial for output only.
 	 */
-	stdout_uart_init();
+  stdio_init_all();
 
 	/* Initialize the critical sections and semaphore */
 	critical_section_init(&temp_critsec);

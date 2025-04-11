@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.12)
 # Since SDK version 2.0.0, PICO_BOARD must be set prior to the next
 # include() (also works for SDK 1.5.1).
 set(PICO_BOARD pico_w)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # From pico-sdk, to integrate the SDK into the project.
 include(pico_sdk_import.cmake)
@@ -544,8 +545,8 @@ if (${PICO_SDK_VERSION_STRING} VERSION_GREATER_EQUAL "2.0.0")
 		${WWWSRCS}
 	)
 
-	pico_enable_stdio_usb(picow-http-example-freertos-nosys 0)
-	pico_enable_stdio_uart(picow-http-example-freertos-nosys 1)
+	pico_enable_stdio_usb(picow-http-example-freertos-nosys 1)
+	pico_enable_stdio_uart(picow-http-example-freertos-nosys 0)
 
 	pico_add_extra_outputs(picow-http-example-freertos-nosys)
 
