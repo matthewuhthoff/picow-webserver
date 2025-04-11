@@ -51,13 +51,13 @@
   - static:
       file: picow.css
 
-# Defaults for img/favicon.png are:
-# - URL path "/img/favicon.png"
+# Defaults for img/5.png are:
+# - URL path "/img/5.png"
 # - Content-Type "image/png", inferred from the .png extension.
 # - Cache-Control "public, max-age=604800" (cacheable for one week).
 # - Contents are neither minified nor compressed (due to "image/png").
   - static:
-      file: img/favicon.png
+      file: img/5.png
 
 # Defaults for sample_app.js are:
 # - URL path "/sample_app.js"
