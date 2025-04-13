@@ -46,7 +46,7 @@
       - br
 
   - static:
-      file: img/favicon.png
+      file: img/5.png
 
   - static:
       file: sample_app.js
