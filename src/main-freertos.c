@@ -56,7 +56,7 @@ int
 main(void)
 {
 	BaseType_t ret;
-	TaskHandle_t temp_task, rssi_task, http_task;
+	TaskHandle_t temp_task, rssi_task, picture_task, http_task;
 
 	/* Global initialization */
 	main_init();
@@ -96,6 +96,12 @@ main(void)
 	ret = xTaskCreate(initiate_rssi, "rssi", configMINIMAL_STACK_SIZE,
 			  &linkup, TASK_PRIO, &rssi_task);
 	PICOW_HTTP_ASSERT(ret == pdPASS);
+
+
+	// ret = xTaskCreate(initiate_picture, "picture", configMINIMAL_STACK_SIZE,
+	// 		  NULL, TASK_PRIO, &picture_task);
+	// PICOW_HTTP_ASSERT(ret == pdPASS);
+
 
 	/*
 	 * The init task for the network and http server needs a

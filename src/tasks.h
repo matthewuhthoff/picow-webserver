@@ -34,6 +34,11 @@ void initiate_temp(void *params);
 void initiate_rssi(void *params);
 
 /*
+ * initiate_picture is the freeRTOS thread running the camera
+ */
+void initiate_picture(void *params);
+
+/*
  * initiate_http() initializes networking in station mode, and gets a
  * connection with the AP defined by the WIFI_SSID and WIFI_PASSWORD build
  * parameters. When the connection has reached the linkup state, it

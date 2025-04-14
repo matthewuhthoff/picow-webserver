@@ -216,6 +216,18 @@ initiate_rssi(void *params)
 #endif
 }
 
+void initiate_picture(void *params)
+{
+    (void)params;
+    #if HAVE_FREERTOS
+    const TickType_t xDelay = 500 / portTICK_PERIOD_MS;
+    while(1) {
+        printf("picture thrad running\n");
+        vTaskDelay(xDelay);
+    }
+    #endif
+}
+
 /*
  * Common initialization code run in main() for FreeRTOS and non-FreeRTOS
  * implementations.
@@ -428,6 +440,11 @@ initiate_http(void *params)
 	err = register_hndlr_methods(&cfg, "/temp", temp_handler,
 				     HTTP_METHODS_GET_HEAD, NULL);
 	PICOW_HTTP_ASSERT(err == ERR_OK);
+
+	err = register_hndlr_methods(&cfg, "/picture", picture_handler,
+				     HTTP_METHODS_GET_HEAD, NULL);
+	PICOW_HTTP_ASSERT(err == ERR_OK);
+
 
 	err = register_hndlr_methods(&cfg, "/led", led_handler,
 				     HTTP_METHODS_GET_HEAD, NULL);

@@ -157,6 +157,39 @@ temp_handler(struct http *http, void *p)
 	return http_resp_send_buf(http, body, body_len, false);
 }
 
+err_t picture_handler(struct http *http, void *p)
+{
+	struct resp *resp = http_resp(http);
+	err_t err;
+	(void)p;
+
+
+	// char body[MAX_INT_LEN];
+	// size_t body_len = MAX_INT_LEN;
+
+  char body[] = "hello";
+  size_t body_len = 6;
+
+	if ((err = http_resp_set_len(resp, body_len)) != ERR_OK) {
+		HTTP_LOG_ERROR("http_resp_set_len() failed: %d", err);
+		return http_resp_err(http, HTTP_STATUS_INTERNAL_SERVER_ERROR);
+	}
+
+	if ((err = http_resp_set_type_ltrl(resp, "text/plain")) != ERR_OK) {
+		HTTP_LOG_ERROR("http_resp_set_type_ltrl() failed: %d", err);
+		return http_resp_err(http, HTTP_STATUS_INTERNAL_SERVER_ERROR);
+	}
+
+	if ((err = http_resp_set_hdr_ltrl(resp, "Cache-Control", "no-store"))
+	    != ERR_OK) {
+		HTTP_LOG_ERROR("Set header Cache-Control failed: %d", err);
+		return http_resp_err(http, HTTP_STATUS_INTERNAL_SERVER_ERROR);
+	}
+
+  printf("Sending picture data\n");
+	return http_resp_send_buf(http, body, body_len, false);
+}
+
 /*
  * These strings will be used as response bodies for the /led request, for
  * LED off or on, respectively. static const data is stored in read-only

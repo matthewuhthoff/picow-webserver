@@ -96,6 +96,13 @@
       - GET
       - HEAD
 
+  - custom:
+      path: /picture
+      methods:
+      - GET
+      - HEAD
+
+
 # Handler for GET/HEAD /led
 # Return the current state of the onboard LED (on/off).
 # With a query string, the LED may be turned on, turned off, or toggled.
