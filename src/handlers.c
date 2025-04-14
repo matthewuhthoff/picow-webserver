@@ -10,6 +10,7 @@
  * See: https://gitlab.com/slimhazard/picow_http/-/wikis/Custom-Handlers
  */
 
+#include "ArducamCamera.h"
 #include "pico/cyw43_arch.h"
 
 /*
@@ -19,6 +20,9 @@
 #include "picow_http/http.h"
 
 #include "handlers.h"
+#include <pico/time.h>
+// #include <cstdint>
+// #include <stdint.h>
 
 /* Size of the largest string that could result from format_decimal(). */
 #define MAX_INT_LEN (STRLEN_LTRL("−2147483648"))
@@ -157,25 +161,37 @@ temp_handler(struct http *http, void *p)
 	return http_resp_send_buf(http, body, body_len, false);
 }
 
+
+extern ArducamCamera camera;
 err_t picture_handler(struct http *http, void *p)
 {
 	struct resp *resp = http_resp(http);
 	err_t err;
 	(void)p;
 
+  static uint8_t image_buf[16000];
+  uint32_t image_size;
 
-	// char body[MAX_INT_LEN];
-	// size_t body_len = MAX_INT_LEN;
+  image_size = camera.totalLength;
 
-  char body[] = "hello";
-  size_t body_len = 6;
+  uint32_t num_chunks = image_size / 255;
+  uint8_t remainder = image_size % 255;
+
+  printf("Num chunks: %d   remainder: %d\n", num_chunks, remainder);
+  for (uint32_t i = 0; i < num_chunks; ++i) {
+        readBuff(&camera, &image_buf[i * 255], 255);
+  }
+  readBuff(&camera, &image_buf[num_chunks * 255], remainder);
+
+  char* body = image_buf;
+  size_t body_len = image_size;
 
 	if ((err = http_resp_set_len(resp, body_len)) != ERR_OK) {
 		HTTP_LOG_ERROR("http_resp_set_len() failed: %d", err);
 		return http_resp_err(http, HTTP_STATUS_INTERNAL_SERVER_ERROR);
 	}
 
-	if ((err = http_resp_set_type_ltrl(resp, "text/plain")) != ERR_OK) {
+	if ((err = http_resp_set_type_ltrl(resp, "application/octet-stream")) != ERR_OK) {
 		HTTP_LOG_ERROR("http_resp_set_type_ltrl() failed: %d", err);
 		return http_resp_err(http, HTTP_STATUS_INTERNAL_SERVER_ERROR);
 	}
@@ -186,7 +202,6 @@ err_t picture_handler(struct http *http, void *p)
 		return http_resp_err(http, HTTP_STATUS_INTERNAL_SERVER_ERROR);
 	}
 
-  printf("Sending picture data\n");
 	return http_resp_send_buf(http, body, body_len, false);
 }
 

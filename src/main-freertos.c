@@ -18,6 +18,7 @@
 
 #include "FreeRTOS.h"
 #include "task.h"
+#include <pico/time.h>
 
 /*
  * The priority of the initialization tasks is probably not critical,
@@ -98,9 +99,9 @@ main(void)
 	PICOW_HTTP_ASSERT(ret == pdPASS);
 
 
-	// ret = xTaskCreate(initiate_picture, "picture", configMINIMAL_STACK_SIZE,
-	// 		  NULL, TASK_PRIO, &picture_task);
-	// PICOW_HTTP_ASSERT(ret == pdPASS);
+	ret = xTaskCreate(initiate_picture, "picture", configMINIMAL_STACK_SIZE,
+			  NULL, 0, &picture_task);
+	PICOW_HTTP_ASSERT(ret == pdPASS);
 
 
 	/*

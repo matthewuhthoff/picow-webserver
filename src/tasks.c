@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <stdint.h>
 
+#include "ArducamCamera.h"
 #include "pico/cyw43_arch.h"
 #include "pico/multicore.h"
 #include "pico/sync.h"
@@ -216,13 +217,25 @@ initiate_rssi(void *params)
 #endif
 }
 
+ArducamCamera camera;
 void initiate_picture(void *params)
 {
     (void)params;
+    printf("Starting camera\n");
+    camera = createArducamCamera(17);
+
+    if(!begin(&camera)) {
+        printf("Camera begin success\n");
+    }
+    printf("trying to take picture\n");
+
+    CamStatus status;
+    status = takePicture(&camera, CAM_IMAGE_MODE_320X320, CAM_IMAGE_PIX_FMT_JPG);
+    printf("Status = %d\n", status);
+    printf("Picture size: %d\n", camera.totalLength);
     #if HAVE_FREERTOS
-    const TickType_t xDelay = 500 / portTICK_PERIOD_MS;
+    const TickType_t xDelay = 5000 / portTICK_PERIOD_MS;
     while(1) {
-        printf("picture thrad running\n");
         vTaskDelay(xDelay);
     }
     #endif
@@ -277,6 +290,7 @@ main_init(void)
 	 */
   stdio_init_all();
 
+  sleep_ms(2000);
 	/* Initialize the critical sections and semaphore */
 	critical_section_init(&temp_critsec);
 	critical_section_init(&rssi_critsec);

@@ -36,6 +36,7 @@ pico_sdk_init()
 # include(path/to/picow-http)
 #
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/lib/picow-http)
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/lib/Arducam)
 
 # For use with a picoprobe (this has nothing to do with picow-http).
 # 'make reset' restarts the app.
@@ -77,6 +78,7 @@ set(SRCS
 set(INCLUDES
 	${CMAKE_CURRENT_LIST_DIR}/src
 	${CMAKE_CURRENT_LIST_DIR}/lib/picow-http/etc
+  ${CMAKE_CURRENT_LIST_DIR}/lib/Arducam
 )
 
 # Static WWW resources to be embedded for the HTTP server.
@@ -98,6 +100,7 @@ set(LIBS
 	hardware_adc
 	hardware_irq
 	hardware_sync
+  libarducam
 )
 
 # The next sections configure the executables; mostly standard for the
