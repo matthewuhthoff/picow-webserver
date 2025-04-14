@@ -218,6 +218,7 @@ initiate_rssi(void *params)
 }
 
 ArducamCamera camera;
+uint32_t picture_number = 0;
 void initiate_picture(void *params)
 {
     (void)params;
@@ -231,6 +232,7 @@ void initiate_picture(void *params)
 
     CamStatus status;
     status = takePicture(&camera, CAM_IMAGE_MODE_320X320, CAM_IMAGE_PIX_FMT_JPG);
+    ++picture_number;
     printf("Status = %d\n", status);
     printf("Picture size: %d\n", camera.totalLength);
     #if HAVE_FREERTOS

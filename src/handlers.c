@@ -21,6 +21,7 @@
 
 #include "handlers.h"
 #include <pico/time.h>
+#include <stdint.h>
 // #include <cstdint>
 // #include <stdint.h>
 
@@ -163,6 +164,7 @@ temp_handler(struct http *http, void *p)
 
 
 extern ArducamCamera camera;
+extern uint32_t picture_number;
 err_t picture_handler(struct http *http, void *p)
 {
 	struct resp *resp = http_resp(http);
@@ -170,19 +172,22 @@ err_t picture_handler(struct http *http, void *p)
 	(void)p;
 
   static uint8_t image_buf[16000];
-  uint32_t image_size;
+  static uint32_t image_size;
+  static uint32_t prev_picture_num = 0;
 
-  image_size = camera.totalLength;
+  if (prev_picture_num < picture_number) {
+    image_size = camera.totalLength;
+    uint32_t num_chunks = image_size / 255;
+    uint8_t remainder = image_size % 255;
 
-  uint32_t num_chunks = image_size / 255;
-  uint8_t remainder = image_size % 255;
-
-  printf("Num chunks: %d   remainder: %d\n", num_chunks, remainder);
-  for (uint32_t i = 0; i < num_chunks; ++i) {
-        readBuff(&camera, &image_buf[i * 255], 255);
-  }
-  readBuff(&camera, &image_buf[num_chunks * 255], remainder);
-
+   for (uint32_t i = 0; i < num_chunks; ++i) {
+          readBuff(&camera, &image_buf[i * 255], 255);
+    }
+    readBuff(&camera, &image_buf[num_chunks * 255], remainder);
+    ++prev_picture_num;
+  } else {
+        printf("Using Cached\n");
+    }
   char* body = image_buf;
   size_t body_len = image_size;
 
@@ -191,7 +196,7 @@ err_t picture_handler(struct http *http, void *p)
 		return http_resp_err(http, HTTP_STATUS_INTERNAL_SERVER_ERROR);
 	}
 
-	if ((err = http_resp_set_type_ltrl(resp, "application/octet-stream")) != ERR_OK) {
+	if ((err = http_resp_set_type_ltrl(resp, "image/jpeg")) != ERR_OK) {
 		HTTP_LOG_ERROR("http_resp_set_type_ltrl() failed: %d", err);
 		return http_resp_err(http, HTTP_STATUS_INTERNAL_SERVER_ERROR);
 	}
