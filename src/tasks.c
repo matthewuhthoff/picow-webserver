@@ -218,26 +218,31 @@ initiate_rssi(void *params)
 }
 
 ArducamCamera camera;
-uint32_t picture_number = 0;
+bool new_pic = false;
+mutex_t camera_mutex, new_pic_mutex;
 void initiate_picture(void *params)
 {
     (void)params;
+    mutex_init(&camera_mutex);
+    mutex_init(&new_pic_mutex);
     printf("Starting camera\n");
     camera = createArducamCamera(17);
 
     if(!begin(&camera)) {
         printf("Camera begin success\n");
     }
-    printf("trying to take picture\n");
 
-    CamStatus status;
-    status = takePicture(&camera, CAM_IMAGE_MODE_VGA, CAM_IMAGE_PIX_FMT_JPG);
-    ++picture_number;
-    printf("Status = %d\n", status);
-    printf("Picture size: %d\n", camera.totalLength);
-    #if HAVE_FREERTOS
-    const TickType_t xDelay = 5000 / portTICK_PERIOD_MS;
+        #if HAVE_FREERTOS
+    const TickType_t xDelay = 10000 / portTICK_PERIOD_MS;
     while(1) {
+        printf("trying to take picture\n");
+        mutex_enter_blocking(&camera_mutex);
+        takePicture(&camera, CAM_IMAGE_MODE_VGA, CAM_IMAGE_PIX_FMT_JPG);
+        mutex_exit(&camera_mutex);
+        printf("Picture size: %d\n", camera.totalLength);
+        mutex_enter_blocking(&new_pic_mutex);
+        new_pic= true;
+        mutex_exit(&new_pic_mutex);
         vTaskDelay(xDelay);
     }
     #endif

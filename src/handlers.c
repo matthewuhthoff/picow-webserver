@@ -22,6 +22,7 @@
 #include "handlers.h"
 #include "picow_http/log.h"
 #include <lwip/err.h>
+#include <pico/mutex.h>
 #include <pico/time.h>
 #include <stdint.h>
 // #include <cstdint>
@@ -167,7 +168,8 @@ temp_handler(struct http *http, void *p)
 
 #define min(a,b) (((a)<(b))?(a):(b))
 extern ArducamCamera camera;
-extern uint32_t picture_number;
+extern bool new_pic;
+extern mutex_t camera_mutex, new_pic_mutex;
 err_t picture_handler(struct http *http, void *p)
 {
 	struct resp *resp = http_resp(http);
@@ -178,7 +180,7 @@ err_t picture_handler(struct http *http, void *p)
 	 static uint32_t image_size;
 	 static uint32_t prev_picture_num = 0;
 
-	 if (prev_picture_num < picture_number) {
+	 if (new_pic) {
 	   image_size = camera.totalLength;
      free(image_buf);
      image_buf = (uint8_t*)malloc(image_size);
@@ -189,12 +191,15 @@ err_t picture_handler(struct http *http, void *p)
 
 	   uint32_t num_chunks = image_size / 255;
 	   uint8_t remainder = image_size % 255;
-
+     mutex_enter_blocking(&camera_mutex);
 	  for (uint32_t i = 0; i < num_chunks; ++i) {
 	         readBuff(&camera, &image_buf[i * 255], 255);
 	   }
 	   readBuff(&camera, &image_buf[num_chunks * 255], remainder);
-	   ++prev_picture_num;
+     mutex_exit(&camera_mutex);
+     mutex_enter_blocking(&new_pic_mutex);
+     new_pic= false;
+     mutex_exit(&new_pic_mutex);
 	 } else {
 	       printf("Using Cached\n");
      }
