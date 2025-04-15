@@ -22,6 +22,7 @@
  */
 const TEMP_UPDATE_INTVL_MS = 2 * 2718;
 const RSSI_UPDATE_INTVL_MS = 3 * 3141;
+const PIC_UPDATE_INTVL_MS = 10 * 1000;
 
 /*
  * The preferred temperature scale (K, C, F) is stored in browser
@@ -332,6 +333,14 @@ async function updateRssi() {
     }
 }
 
+async function refreshImage() {
+    if (document.visibilityState === "hidden") {
+        return;
+    }
+    const img = document.getElementById('selfie');
+    const timestamp = new Date().getTime();
+    img.src= `/picture?cb=${timestamp}`;
+}
 /*
  * Event listener for visibility changes. If the browser window
  * becomes visible, initiate updates for the temperature and signal
@@ -383,6 +392,7 @@ async function init() {
 
     setInterval(updateTemp, TEMP_UPDATE_INTVL_MS);
     setInterval(updateRssi, RSSI_UPDATE_INTVL_MS);
+    setInterval(refreshImage, PIC_UPDATE_INTVL_MS);
 }
 
 /* Run initialization when the document has been loaded. */
