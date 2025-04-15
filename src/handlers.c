@@ -20,6 +20,8 @@
 #include "picow_http/http.h"
 
 #include "handlers.h"
+#include "picow_http/log.h"
+#include <lwip/err.h>
 #include <pico/time.h>
 #include <stdint.h>
 // #include <cstdint>
@@ -163,6 +165,7 @@ temp_handler(struct http *http, void *p)
 }
 
 
+#define min(a,b) (((a)<(b))?(a):(b))
 extern ArducamCamera camera;
 extern uint32_t picture_number;
 err_t picture_handler(struct http *http, void *p)
@@ -171,25 +174,32 @@ err_t picture_handler(struct http *http, void *p)
 	err_t err;
 	(void)p;
 
-  static uint8_t image_buf[16000];
-  static uint32_t image_size;
-  static uint32_t prev_picture_num = 0;
+	 static uint8_t* image_buf;
+	 static uint32_t image_size;
+	 static uint32_t prev_picture_num = 0;
 
-  if (prev_picture_num < picture_number) {
-    image_size = camera.totalLength;
-    uint32_t num_chunks = image_size / 255;
-    uint8_t remainder = image_size % 255;
+	 if (prev_picture_num < picture_number) {
+	   image_size = camera.totalLength;
+     free(image_buf);
+     image_buf = (uint8_t*)malloc(image_size);
+     if(!image_buf) {
+            printf("Malloc failed\n");
+        }
+     memset(image_buf, 0, image_size);
 
-   for (uint32_t i = 0; i < num_chunks; ++i) {
-          readBuff(&camera, &image_buf[i * 255], 255);
-    }
-    readBuff(&camera, &image_buf[num_chunks * 255], remainder);
-    ++prev_picture_num;
-  } else {
-        printf("Using Cached\n");
-    }
-  char* body = image_buf;
-  size_t body_len = image_size;
+	   uint32_t num_chunks = image_size / 255;
+	   uint8_t remainder = image_size % 255;
+
+	  for (uint32_t i = 0; i < num_chunks; ++i) {
+	         readBuff(&camera, &image_buf[i * 255], 255);
+	   }
+	   readBuff(&camera, &image_buf[num_chunks * 255], remainder);
+	   ++prev_picture_num;
+	 } else {
+	       printf("Using Cached\n");
+     }
+	 char* body = image_buf;
+	 size_t body_len = image_size;
 
 	if ((err = http_resp_set_len(resp, body_len)) != ERR_OK) {
 		HTTP_LOG_ERROR("http_resp_set_len() failed: %d", err);
@@ -207,7 +217,48 @@ err_t picture_handler(struct http *http, void *p)
 		return http_resp_err(http, HTTP_STATUS_INTERNAL_SERVER_ERROR);
 	}
 
-	return http_resp_send_buf(http, body, body_len, false);
+	return http_resp_send_buf(http, body, body_len, true);
+
+	//  static uint8_t image_buf[255];
+	//  static uint32_t image_size;
+	//  static uint32_t prev_picture_num = 0;
+	//
+	//  uint32_t bytes_remaining;
+	//  uint8_t bytes_to_read;
+	//  bytes_remaining = image_size = camera.totalLength;
+	//
+	// if ((err = http_resp_set_type_ltrl(resp, "image/jpeg")) != ERR_OK) {
+	// 	HTTP_LOG_ERROR("http_resp_set_type_ltrl() failed: %d", err);
+	// 	return http_resp_err(http, HTTP_STATUS_INTERNAL_SERVER_ERROR);
+	// }
+	//
+	//  if (http_resp_set_xfer_chunked(resp) != ERR_OK) {
+	//    HTTP_LOG_ERROR("Failed to set xfer_chunked: %d", err);
+	// 	return http_resp_err(http, HTTP_STATUS_INTERNAL_SERVER_ERROR);
+	//  }
+	//  err_t chunk_err;
+	//  uint32_t sent_correctly = 0;
+	//  uint32_t sent_incorrectly = 0;
+	//  while(bytes_remaining > 0) {
+	//      bytes_to_read = min(bytes_remaining, 255);
+	//
+	//      readBuff(&camera, image_buf, bytes_to_read);
+	//      chunk_err = http_resp_send_chunk(http, image_buf, bytes_to_read, false);
+	//      if (chunk_err != ERR_OK){
+	//        HTTP_LOG_ERROR("Failed to send chunk: %d", chunk_err);
+	//        ++sent_incorrectly;
+	//      } else {
+	//            printf("Sent chunk successfully\n");
+	//            ++sent_correctly;
+	//      }
+	//      bytes_remaining -= bytes_to_read;
+	//    }
+	//
+	//    if (http_resp_send_chunk(http, NULL, 0, false) != ERR_OK) {
+	//      HTTP_LOG_ERROR("Failed to send NULL chunk", err);
+	//    }
+	//    printf("Sent: %d Chunks correctly\nSent %d Chunks incorrectly\n", sent_correctly, sent_incorrectly);
+	//    return ERR_OK;
 }
 
 /*

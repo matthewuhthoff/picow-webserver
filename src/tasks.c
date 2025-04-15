@@ -231,7 +231,7 @@ void initiate_picture(void *params)
     printf("trying to take picture\n");
 
     CamStatus status;
-    status = takePicture(&camera, CAM_IMAGE_MODE_320X320, CAM_IMAGE_PIX_FMT_JPG);
+    status = takePicture(&camera, CAM_IMAGE_MODE_VGA, CAM_IMAGE_PIX_FMT_JPG);
     ++picture_number;
     printf("Status = %d\n", status);
     printf("Picture size: %d\n", camera.totalLength);
