@@ -36,6 +36,7 @@ pico_sdk_init()
 # include(path/to/picow-http)
 #
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/lib/picow-http)
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/lib/Arducam)
 
 # For use with a picoprobe (this has nothing to do with picow-http).
 # 'make reset' restarts the app.
@@ -77,6 +78,7 @@ set(SRCS
 set(INCLUDES
 	${CMAKE_CURRENT_LIST_DIR}/src
 	${CMAKE_CURRENT_LIST_DIR}/lib/picow-http/etc
+  ${CMAKE_CURRENT_LIST_DIR}/lib/Arducam
 )
 
 # Static WWW resources to be embedded for the HTTP server.
@@ -98,6 +100,7 @@ set(LIBS
 	hardware_adc
 	hardware_irq
 	hardware_sync
+  libarducam
 )
 
 # The next sections configure the executables; mostly standard for the
@@ -107,107 +110,6 @@ set(LIBS
 ##
 ## threadsafe background mode, without TLS
 ##
-
-add_executable(picow-http-example-background
-	${CMAKE_CURRENT_LIST_DIR}/src/main-non-freertos.c
-	${SRCS}
-)
-
-# PICOW_HTTPS indicates TLS support (used for binary info).
-target_compile_definitions(picow-http-example-background PRIVATE
-	WIFI_SSID=\"${WIFI_SSID}\"
-	WIFI_PASSWORD=\"${WIFI_PASSWORD}\"
-	PICOW_HTTPS=0
-)
-
-target_include_directories(picow-http-example-background PRIVATE ${INCLUDES})
-
-# picow_http links the HTTP server without TLS support.
-# pico_cyw43_arch_lwip_threadsafe_background sets the network
-# architecture.
-target_link_libraries(picow-http-example-background
-	picow_http
-	pico_cyw43_arch_lwip_threadsafe_background
-	${LIBS}
-)
-
-# The arguments for picow_http_gen_handlers() are:
-# - target name
-# - YAML file that configures static resources and custom response
-#   handlers
-# - Directory that contains the static resources
-# - List of static resources; here defined in WWWSRCS above.
-# See: https://gitlab.com/slimhazard/picow_http/-/wikis/picow_http_gen_handlers
-picow_http_gen_handlers(picow-http-example-background
-	${CMAKE_CURRENT_SOURCE_DIR}/www/www.yaml
-	${CMAKE_CURRENT_SOURCE_DIR}/www
-	${WWWSRCS}
-)
-
-# This defines UART, but not USB, as the destination for the HTTP
-# server's log output.
-pico_enable_stdio_usb(picow-http-example-background 0)
-pico_enable_stdio_uart(picow-http-example-background 1)
-
-pico_add_extra_outputs(picow-http-example-background)
-
-# For use with a picoprobe.
-# 'make flash-picow-http-example-background' loads the binary to the
-# PicoW.
-picoprobe_add_flash_target(picow-http-example-background)
-
-pico_set_program_description(picow-http-example-background
-	"example app for the picow-http library"
-)
-pico_set_program_url(picow-http-example-background
-	"https://gitlab.com/slimhazard/picow-http-example"
-)
-
-##
-## poll mode, without TLS
-##
-
-add_executable(picow-http-example-poll
-	${CMAKE_CURRENT_LIST_DIR}/src/main-non-freertos.c
-	${SRCS}
-)
-
-target_compile_definitions(picow-http-example-poll PRIVATE
-	WIFI_SSID=\"${WIFI_SSID}\"
-	WIFI_PASSWORD=\"${WIFI_PASSWORD}\"
-	PICOW_HTTPS=0
-)
-
-target_include_directories(picow-http-example-poll PRIVATE ${INCLUDES})
-
-# pico_cyw43_arch_lwip_poll sets the network architecture tp poll
-# mode.
-target_link_libraries(picow-http-example-poll
-	picow_http
-	pico_cyw43_arch_lwip_poll
-	${LIBS}
-)
-
-# Exactly as above
-picow_http_gen_handlers(picow-http-example-poll
- 	${CMAKE_CURRENT_SOURCE_DIR}/www/www.yaml
- 	${CMAKE_CURRENT_SOURCE_DIR}/www
- 	${WWWSRCS}
-)
-
-pico_enable_stdio_usb(picow-http-example-poll 0)
-pico_enable_stdio_uart(picow-http-example-poll 1)
-
-pico_add_extra_outputs(picow-http-example-poll)
-
-picoprobe_add_flash_target(picow-http-example-poll)
-
-pico_set_program_description(picow-http-example-poll
-	"example app for the picow-http library"
-)
-pico_set_program_url(picow-http-example-poll
-	"https://gitlab.com/slimhazard/picow-http-example"
-)
 
 ##
 ## threadsafe background mode, with TLS
@@ -229,95 +131,6 @@ set(HTTPS_WWWSRCS
 	${CMAKE_CURRENT_LIST_DIR}/www/crt/picow-sample.key
 )
 
-add_executable(picow-https-example-background
-	${CMAKE_CURRENT_LIST_DIR}/src/main-non-freertos.c
-	${HTTPS_SRCS}
-)
-
-target_compile_definitions(picow-https-example-background PRIVATE
-	WIFI_SSID=\"${WIFI_SSID}\"
-	WIFI_PASSWORD=\"${WIFI_PASSWORD}\"
-	PICOW_HTTPS=1
-)
-
-target_include_directories(picow-https-example-background PRIVATE ${INCLUDES})
-
-# Link picow-https for TLS support.
-target_link_libraries(picow-https-example-background
-	picow_https
-	pico_cyw43_arch_lwip_threadsafe_background
-	${LIBS}
-)
-
-# For TLS, we use a version of the WWW yaml that includes a
-# specification of the certificate and key. The YAML also specifies
-# brotli compression for compressible static resources, since common
-# browsers accept brotli in responses sent over TLS connections.
-picow_http_gen_handlers(picow-https-example-background
-	${CMAKE_CURRENT_SOURCE_DIR}/www/www_https.yaml
-	${CMAKE_CURRENT_SOURCE_DIR}/www
-	${WWWSRCS}
-)
-
-pico_enable_stdio_usb(picow-https-example-background 0)
-pico_enable_stdio_uart(picow-https-example-background 1)
-
-pico_add_extra_outputs(picow-https-example-background)
-
-picoprobe_add_flash_target(picow-https-example-background)
-
-pico_set_program_description(picow-https-example-background
-	"example app for the picow-http library"
-)
-pico_set_program_url(picow-https-example-background
-	"https://gitlab.com/slimhazard/picow-http-example"
-)
-
-##
-## poll mode, with TLS
-##
-
-add_executable(picow-https-example-poll
-	${CMAKE_CURRENT_LIST_DIR}/src/main-non-freertos.c
-	${HTTPS_SRCS}
-)
-
-target_compile_definitions(picow-https-example-poll PRIVATE
-	WIFI_SSID=\"${WIFI_SSID}\"
-	WIFI_PASSWORD=\"${WIFI_PASSWORD}\"
-	PICOW_HTTPS=1
-)
-
-target_include_directories(picow-https-example-poll PRIVATE ${INCLUDES})
-
-# Link picow-https for TLS support.
-target_link_libraries(picow-https-example-poll
-	picow_https
-	pico_cyw43_arch_lwip_poll
-	${LIBS}
-)
-
-picow_http_gen_handlers(picow-https-example-poll
-	${CMAKE_CURRENT_SOURCE_DIR}/www/www_https.yaml
-	${CMAKE_CURRENT_SOURCE_DIR}/www
-	${WWWSRCS}
-)
-
-pico_enable_stdio_usb(picow-https-example-poll 0)
-pico_enable_stdio_uart(picow-https-example-poll 1)
-
-pico_add_extra_outputs(picow-https-example-poll)
-
-picoprobe_add_flash_target(picow-https-example-poll)
-
-pico_set_program_description(picow-https-example-poll
-	"example app for the picow-http library"
-)
-pico_set_program_url(picow-https-example-poll
-	"https://gitlab.com/slimhazard/picow-http-example"
-)
-
-##
 ## Note: we only build FreeRTOS sample apps with NO_SYS=0, or sys
 ## mode. NO_SYS=1 (or nosys) is currently not supported by picow-http.
 ## NO_SYS=0 is set by default for FreeRTOS builds in picow-http's
@@ -370,52 +183,51 @@ pico_set_program_url(picow-http-example-freertos-sys-smp
 	"https://gitlab.com/slimhazard/picow-http-example"
 )
 
-##
-## SMP FreeRTOS in sys mode, with TLS
-##
-add_executable(picow-https-example-freertos-sys-smp
-	${CMAKE_CURRENT_LIST_DIR}/src/main-freertos.c
-	${HTTPS_SRCS}
-)
-
-target_compile_definitions(picow-https-example-freertos-sys-smp PRIVATE
-	WIFI_SSID=\"${WIFI_SSID}\"
-	WIFI_PASSWORD=\"${WIFI_PASSWORD}\"
-	PICOW_HTTPS=1
-	HAVE_FREERTOS=1
-)
-
-target_include_directories(picow-https-example-freertos-sys-smp PRIVATE
-	${INCLUDES}
-)
-
-target_link_libraries(picow-https-example-freertos-sys-smp
-	picow_https
-	pico_cyw43_arch_lwip_sys_freertos
-	${LIBS}
-	FreeRTOS-Kernel-Heap4
-)
-
-picow_http_gen_handlers(picow-https-example-freertos-sys-smp
-	${CMAKE_CURRENT_SOURCE_DIR}/www/www_https.yaml
-	${CMAKE_CURRENT_SOURCE_DIR}/www
-	${WWWSRCS}
-)
-
-pico_enable_stdio_usb(picow-https-example-freertos-sys-smp 0)
-pico_enable_stdio_uart(picow-https-example-freertos-sys-smp 1)
-
-pico_add_extra_outputs(picow-https-example-freertos-sys-smp)
-
-picoprobe_add_flash_target(picow-https-example-freertos-sys-smp)
-
-pico_set_program_description(picow-https-example-freertos-sys-smp
-	"example app for the picow-http library"
-)
-pico_set_program_url(picow-https-example-freertos-sys-smp
-	"https://gitlab.com/slimhazard/picow-http-example"
-)
-
+# ## SMP FreeRTOS in sys mode, with TLS
+# ##
+# add_executable(picow-https-example-freertos-sys-smp
+# 	${CMAKE_CURRENT_LIST_DIR}/src/main-freertos.c
+# 	${HTTPS_SRCS}
+# )
+#
+# target_compile_definitions(picow-https-example-freertos-sys-smp PRIVATE
+# 	WIFI_SSID=\"${WIFI_SSID}\"
+# 	WIFI_PASSWORD=\"${WIFI_PASSWORD}\"
+# 	PICOW_HTTPS=1
+# 	HAVE_FREERTOS=1
+# )
+#
+# target_include_directories(picow-https-example-freertos-sys-smp PRIVATE
+# 	${INCLUDES}
+# )
+#
+# target_link_libraries(picow-https-example-freertos-sys-smp
+# 	picow_https
+# 	pico_cyw43_arch_lwip_sys_freertos
+# 	${LIBS}
+# 	FreeRTOS-Kernel-Heap4
+# )
+#
+# picow_http_gen_handlers(picow-https-example-freertos-sys-smp
+# 	${CMAKE_CURRENT_SOURCE_DIR}/www/www_https.yaml
+# 	${CMAKE_CURRENT_SOURCE_DIR}/www
+# 	${WWWSRCS}
+# )
+#
+# pico_enable_stdio_usb(picow-https-example-freertos-sys-smp 0)
+# pico_enable_stdio_uart(picow-https-example-freertos-sys-smp 1)
+#
+# pico_add_extra_outputs(picow-https-example-freertos-sys-smp)
+#
+# picoprobe_add_flash_target(picow-https-example-freertos-sys-smp)
+#
+# pico_set_program_description(picow-https-example-freertos-sys-smp
+# 	"example app for the picow-http library"
+# )
+# pico_set_program_url(picow-https-example-freertos-sys-smp
+# 	"https://gitlab.com/slimhazard/picow-http-example"
+# )
+#
 ##
 ## Single-core FreeRTOS in sys mode, without TLS
 ##
@@ -466,50 +278,50 @@ pico_set_program_url(picow-http-example-freertos-sys-single
 ##
 ## Single-core FreeRTOS in sys mode, with TLS
 ##
-add_executable(picow-https-example-freertos-sys-single
-	${CMAKE_CURRENT_LIST_DIR}/src/main-freertos.c
-	${HTTPS_SRCS}
-)
-
-target_compile_definitions(picow-https-example-freertos-sys-single PRIVATE
-	WIFI_SSID=\"${WIFI_SSID}\"
-	WIFI_PASSWORD=\"${WIFI_PASSWORD}\"
-	PICOW_HTTPS=1
-	HAVE_FREERTOS=1
-	configNUMBER_OF_CORES=1
-)
-
-target_include_directories(picow-https-example-freertos-sys-single PRIVATE
-	${INCLUDES}
-)
-
-target_link_libraries(picow-https-example-freertos-sys-single
-	picow_https
-	pico_cyw43_arch_lwip_sys_freertos
-	${LIBS}
-	FreeRTOS-Kernel-Heap4
-)
-
-picow_http_gen_handlers(picow-https-example-freertos-sys-single
-	${CMAKE_CURRENT_SOURCE_DIR}/www/www_https.yaml
-	${CMAKE_CURRENT_SOURCE_DIR}/www
-	${WWWSRCS}
-)
-
-pico_enable_stdio_usb(picow-https-example-freertos-sys-single 0)
-pico_enable_stdio_uart(picow-https-example-freertos-sys-single 1)
-
-pico_add_extra_outputs(picow-https-example-freertos-sys-single)
-
-picoprobe_add_flash_target(picow-https-example-freertos-sys-single)
-
-pico_set_program_description(picow-https-example-freertos-sys-single
-	"example app for the picow-http library"
-)
-pico_set_program_url(picow-https-example-freertos-sys-single
-	"https://gitlab.com/slimhazard/picow-http-example"
-)
-
+# add_executable(picow-https-example-freertos-sys-single
+# 	${CMAKE_CURRENT_LIST_DIR}/src/main-freertos.c
+# 	${HTTPS_SRCS}
+# )
+#
+# target_compile_definitions(picow-https-example-freertos-sys-single PRIVATE
+# 	WIFI_SSID=\"${WIFI_SSID}\"
+# 	WIFI_PASSWORD=\"${WIFI_PASSWORD}\"
+# 	PICOW_HTTPS=1
+# 	HAVE_FREERTOS=1
+# 	configNUMBER_OF_CORES=1
+# )
+#
+# target_include_directories(picow-https-example-freertos-sys-single PRIVATE
+# 	${INCLUDES}
+# )
+#
+# target_link_libraries(picow-https-example-freertos-sys-single
+# 	picow_https
+# 	pico_cyw43_arch_lwip_sys_freertos
+# 	${LIBS}
+# 	FreeRTOS-Kernel-Heap4
+# )
+#
+# picow_http_gen_handlers(picow-https-example-freertos-sys-single
+# 	${CMAKE_CURRENT_SOURCE_DIR}/www/www_https.yaml
+# 	${CMAKE_CURRENT_SOURCE_DIR}/www
+# 	${WWWSRCS}
+# )
+#
+# pico_enable_stdio_usb(picow-https-example-freertos-sys-single 0)
+# pico_enable_stdio_uart(picow-https-example-freertos-sys-single 1)
+#
+# pico_add_extra_outputs(picow-https-example-freertos-sys-single)
+#
+# picoprobe_add_flash_target(picow-https-example-freertos-sys-single)
+#
+# pico_set_program_description(picow-https-example-freertos-sys-single
+# 	"example app for the picow-http library"
+# )
+# pico_set_program_url(picow-https-example-freertos-sys-single
+# 	"https://gitlab.com/slimhazard/picow-http-example"
+# )
+#
 ##
 ## "no-sys" FreeRTOS: with threadsafe background architecture and NO_SYS=1.
 ## Only supported since SDK version 2.0.0.
@@ -559,50 +371,50 @@ if (${PICO_SDK_VERSION_STRING} VERSION_GREATER_EQUAL "2.0.0")
 		"https://gitlab.com/slimhazard/picow-http-example"
 	)
 
-	# With TLS
-	add_executable(picow-https-example-freertos-nosys
-		${CMAKE_CURRENT_LIST_DIR}/src/main-freertos.c
-		${HTTPS_SRCS}
-	)
-
-	target_compile_definitions(picow-https-example-freertos-nosys PRIVATE
-		WIFI_SSID=\"${WIFI_SSID}\"
-		WIFI_PASSWORD=\"${WIFI_PASSWORD}\"
-		PICOW_HTTPS=1
-		HAVE_FREERTOS=1
-		NO_SYS=1
-	)
-
-	target_include_directories(picow-https-example-freertos-nosys PRIVATE
-		${INCLUDES}
-	)
-
-	target_link_libraries(picow-https-example-freertos-nosys
-		picow_https
-		pico_cyw43_arch_lwip_threadsafe_background
-		${LIBS}
-		FreeRTOS-Kernel-Heap4
-	)
-
-	picow_http_gen_handlers(picow-https-example-freertos-nosys
-		${CMAKE_CURRENT_SOURCE_DIR}/www/www_https.yaml
-		${CMAKE_CURRENT_SOURCE_DIR}/www
-		${WWWSRCS}
-	)
-
-	pico_enable_stdio_usb(picow-https-example-freertos-nosys 0)
-	pico_enable_stdio_uart(picow-https-example-freertos-nosys 1)
-
-	pico_add_extra_outputs(picow-https-example-freertos-nosys)
-
-	picoprobe_add_flash_target(picow-https-example-freertos-nosys)
-
-	pico_set_program_description(picow-https-example-freertos-nosys
-		"example app for the picow-http library"
-	)
-	pico_set_program_url(picow-https-example-freertos-nosys
-		"https://gitlab.com/slimhazard/picow-http-example"
-	)
+	# # With TLS
+	# add_executable(picow-https-example-freertos-nosys
+	# 	${CMAKE_CURRENT_LIST_DIR}/src/main-freertos.c
+	# 	${HTTPS_SRCS}
+	# )
+	#
+	# target_compile_definitions(picow-https-example-freertos-nosys PRIVATE
+	# 	WIFI_SSID=\"${WIFI_SSID}\"
+	# 	WIFI_PASSWORD=\"${WIFI_PASSWORD}\"
+	# 	PICOW_HTTPS=1
+	# 	HAVE_FREERTOS=1
+	# 	NO_SYS=1
+	# )
+	#
+	# target_include_directories(picow-https-example-freertos-nosys PRIVATE
+	# 	${INCLUDES}
+	# )
+	#
+	# target_link_libraries(picow-https-example-freertos-nosys
+	# 	picow_https
+	# 	pico_cyw43_arch_lwip_threadsafe_background
+	# 	${LIBS}
+	# 	FreeRTOS-Kernel-Heap4
+	# )
+	#
+	# picow_http_gen_handlers(picow-https-example-freertos-nosys
+	# 	${CMAKE_CURRENT_SOURCE_DIR}/www/www_https.yaml
+	# 	${CMAKE_CURRENT_SOURCE_DIR}/www
+	# 	${WWWSRCS}
+	# )
+	#
+	# pico_enable_stdio_usb(picow-https-example-freertos-nosys 0)
+	# pico_enable_stdio_uart(picow-https-example-freertos-nosys 1)
+	#
+	# pico_add_extra_outputs(picow-https-example-freertos-nosys)
+	#
+	# picoprobe_add_flash_target(picow-https-example-freertos-nosys)
+	#
+	# pico_set_program_description(picow-https-example-freertos-nosys
+	# 	"example app for the picow-http library"
+	# )
+	# pico_set_program_url(picow-https-example-freertos-nosys
+	# 	"https://gitlab.com/slimhazard/picow-http-example"
+	# )
 endif()
 
 ##
@@ -627,26 +439,26 @@ else()
 endif()
 message("version: ${PROGRAM_VERSION}")
 
-pico_set_program_version(picow-http-example-background ${PROGRAM_VERSION})
-pico_set_program_version(picow-http-example-poll ${PROGRAM_VERSION})
-pico_set_program_version(picow-https-example-background ${PROGRAM_VERSION})
-pico_set_program_version(picow-https-example-poll ${PROGRAM_VERSION})
+# pico_set_program_version(picow-http-example-background ${PROGRAM_VERSION})
+# pico_set_program_version(picow-http-example-poll ${PROGRAM_VERSION})
+# pico_set_program_version(picow-https-example-background ${PROGRAM_VERSION})
+# pico_set_program_version(picow-https-example-poll ${PROGRAM_VERSION})
 pico_set_program_version(picow-http-example-freertos-sys-smp ${PROGRAM_VERSION})
-pico_set_program_version(picow-https-example-freertos-sys-smp
-                         ${PROGRAM_VERSION}
-)
+# pico_set_program_version(picow-https-example-freertos-sys-smp
+                         # ${PROGRAM_VERSION}
+# )
 pico_set_program_version(picow-http-example-freertos-sys-single
                          ${PROGRAM_VERSION}
 )
-pico_set_program_version(picow-https-example-freertos-sys-single
-                         ${PROGRAM_VERSION}
-)
+# pico_set_program_version(picow-https-example-freertos-sys-single
+                         # ${PROGRAM_VERSION}
+# )
 
 if (${PICO_SDK_VERSION_STRING} VERSION_GREATER_EQUAL "2.0.0")
 	pico_set_program_version(picow-http-example-freertos-nosys
 		${PROGRAM_VERSION}
 	)
-	pico_set_program_version(picow-https-example-freertos-nosys
-		${PROGRAM_VERSION}
-	)
+	# pico_set_program_version(picow-https-example-freertos-nosys
+		# ${PROGRAM_VERSION}
+	# )
 endif()

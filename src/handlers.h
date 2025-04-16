@@ -5,10 +5,10 @@
  * See LICENSE
  */
 
-#include <stdint.h>
-
 #include "lwip/ip_addr.h"
 #include "picow_http/http.h"
+
+#include <stdint.h>
 
 #define MAC_ADDR_LEN (sizeof("01:02:03:04:05:06"))
 
@@ -23,10 +23,10 @@
  * See: https://slimhazard.gitlab.io/picow_http/group__assert.html
  */
 struct netinfo {
-	unsigned	magic;
+    unsigned magic;
 #define NETINFO_MAGIC (0x4f5dde9f)
-	char		ip[IPADDR_STRLEN_MAX];
-	char		mac[MAC_ADDR_LEN];
+    char ip[IPADDR_STRLEN_MAX];
+    char mac[MAC_ADDR_LEN];
 };
 
 /*
@@ -57,7 +57,8 @@ int32_t get_rssi(void);
  *
  * See: https://slimhazard.gitlab.io/picow_http/group__resp.html#ga23afab92dd579b34f1190006b6fa1132
  */
-err_t temp_handler(struct http *http, void *p);
-err_t led_handler(struct http *http, void *p);
-err_t rssi_handler(struct http *http, void *p);
-err_t netinfo_handler(struct http *http, void *p);
+err_t temp_handler(struct http* http, void* p);
+err_t led_handler(struct http* http, void* p);
+err_t picture_handler(struct http* http, void* p);
+err_t rssi_handler(struct http* http, void* p);
+err_t netinfo_handler(struct http* http, void* p);
