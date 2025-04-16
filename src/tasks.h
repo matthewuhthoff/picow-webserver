@@ -22,7 +22,7 @@
  * sensor, initializes the ADC FIFO and an interrupt handler to run when
  * data is written to the FIFO, and starts the ADC in free-running mode.
  */
-void initiate_temp(void *params);
+void initiate_temp(void* params);
 
 /*
  * initiate_rssi() takes the linkup semaphore as a parameter. It starts an
@@ -31,12 +31,12 @@ void initiate_temp(void *params);
  * semaphore to be signaled, after the wifi connection has reached linkup
  * status; because rssi values are invalid until then.
  */
-void initiate_rssi(void *params);
+void initiate_rssi(void* params);
 
 /*
  * initiate_picture is the freeRTOS thread running the camera
  */
-void initiate_picture(void *params);
+void initiate_picture(void* params);
 
 /*
  * initiate_http() initializes networking in station mode, and gets a
@@ -52,7 +52,7 @@ void initiate_picture(void *params);
  * and starts the server by calling http_srv_init(). Finally it turns on
  * the onboard LED.
  */
-void initiate_http(void *params);
+void initiate_http(void* params);
 
 /*
  * main_init() runs initialization code common to both non-FreeRTOS and
