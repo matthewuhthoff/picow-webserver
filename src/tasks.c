@@ -232,8 +232,8 @@ void initiate_picture(void *params)
         printf("Camera begin success\n");
     }
 
-        #if HAVE_FREERTOS
-    const TickType_t xDelay = 10000 / portTICK_PERIOD_MS;
+    #if HAVE_FREERTOS
+    const TickType_t xDelay = 3000 / portTICK_PERIOD_MS;
     while(1) {
         printf("trying to take picture\n");
         mutex_enter_blocking(&camera_mutex);
@@ -241,7 +241,7 @@ void initiate_picture(void *params)
         mutex_exit(&camera_mutex);
         printf("Picture size: %d\n", camera.totalLength);
         mutex_enter_blocking(&new_pic_mutex);
-        new_pic= true;
+        new_pic = true;
         mutex_exit(&new_pic_mutex);
         vTaskDelay(xDelay);
     }

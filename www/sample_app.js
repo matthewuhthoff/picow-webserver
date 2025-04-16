@@ -22,7 +22,7 @@
  */
 const TEMP_UPDATE_INTVL_MS = 2 * 2718;
 const RSSI_UPDATE_INTVL_MS = 3 * 3141;
-const PIC_UPDATE_INTVL_MS = 10 * 1000;
+const PIC_UPDATE_INTVL_MS = 5 * 1000;
 
 /*
  * The preferred temperature scale (K, C, F) is stored in browser
